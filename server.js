@@ -22,10 +22,9 @@ mongoose
 // 🧾 Contestant Schema
 // ===================
 const contestantSchema = new mongoose.Schema({
-  fullname: String,
-  email: String,
-  username: String,
-  password: String,
+  username: { type: String, required: true },
+  phone: { type: String, required: true },
+  password: { type: String, required: true },
   createdAt: { type: Date, default: Date.now }
 });
 
@@ -75,27 +74,23 @@ app.post('/api/upload', upload.single('image'), async (req, res) => {
   }
 });
 
-// =======================
-// 📥 POST /api/contestants/register
-// =======================
+// ✅ Contestant Registration Route
 app.post('/api/contestants/register', async (req, res) => {
   try {
-    const { fullname, email, username, password } = req.body;
+    const { username, phone, password } = req.body;
 
-    if (!fullname || !email || !username || !password) {
+    if (!username || !phone || !password) {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
-    // Check if username or email already exists
-    const existingUser = await Contestant.findOne({
-      $or: [{ email }, { username }]
-    });
+    // Check if username already exists
+    const existingUser = await Contestant.findOne({ username });
 
     if (existingUser) {
-      return res.status(409).json({ message: 'Email or username already taken' });
+      return res.status(409).json({ message: 'Username already taken' });
     }
 
-    const newContestant = new Contestant({ fullname, email, username, password });
+    const newContestant = new Contestant({ username, phone, password });
     await newContestant.save();
 
     res.status(201).json({ message: 'Registration successful' });
