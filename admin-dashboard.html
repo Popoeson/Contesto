@@ -46,12 +46,20 @@
       border-collapse: collapse;
       color: white;
     }
+th, td {
+  padding: 12px;
+  text-align: left;
+}
 
-    th, td {
-      padding: 12px;
-      border-bottom: 1px solid #ffffff30;
-      text-align: left;
-    }
+tbody tr {
+  background-color: rgba(255, 255, 255, 0.05);
+  transition: background 0.3s ease;
+  border-radius: 10px;
+}
+
+tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+      }
 
     th {
       color: #fff000;
