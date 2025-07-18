@@ -148,7 +148,7 @@
     async function confirmDelete(id) {
       if (confirm("Are you sure you want to delete this contestant?")) {
         try {
-          await fetch(\`\${API_URL}/\${id}\`, { method: "DELETE" });
+          await fetch(`${API_URL}/${id}`, { method: "DELETE" });
           contestants = contestants.filter(c => c._id !== id);
           renderTable();
           renderPagination();
