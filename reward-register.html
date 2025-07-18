@@ -38,13 +38,13 @@
     .slogan {
       margin-top: 10px;
       font-size: 14px;
-      color: #ffdd57; /* Custard yellow */
+      color: #ffdd57;
     }
 
     .form-title {
       margin-bottom: 20px;
       font-size: 22px;
-      color: #ff4757; /* Soft red */
+      color: #ff4757;
     }
 
     .input-group {
@@ -93,6 +93,19 @@
     button:hover {
       background-color: #008ecc;
     }
+
+    .message {
+      margin-top: 10px;
+      font-size: 14px;
+    }
+
+    .error {
+      color: #ff6b6b;
+    }
+
+    .success {
+      color: #32ff7e;
+    }
   </style>
 </head>
 <body>
@@ -121,6 +134,7 @@
         <small id="togglePassword">Show Password</small>
       </div>
       <button type="submit">Register</button>
+      <p class="message" id="msg"></p>
     </form>
   </div>
 
@@ -128,12 +142,57 @@
     const toggle = document.getElementById('togglePassword');
     const password = document.getElementById('password');
     const confirmPassword = document.getElementById('confirmPassword');
+    const form = document.getElementById('registerForm');
+    const msg = document.getElementById('msg');
 
     toggle.addEventListener('click', () => {
       const isHidden = password.type === 'password';
       password.type = confirmPassword.type = isHidden ? 'text' : 'password';
       toggle.textContent = isHidden ? 'Hide Password' : 'Show Password';
     });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const username = document.getElementById('username').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const pwd = password.value.trim();
+      const confirmPwd = confirmPassword.value.trim();
+
+      msg.textContent = '';
+      msg.className = 'message';
+
+      if (pwd !== confirmPwd) {
+        msg.textContent = 'Passwords do not match!';
+        msg.classList.add('error');
+        return;
+      }
+
+      try {
+        const res = await fetch('https://your-server.com/api/contestants/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ username, phone, password: pwd }),
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          msg.textContent = data.message || 'Registration successful!';
+          msg.classList.add('success');
+          form.reset();
+        } else {
+          msg.textContent = data.message || 'Registration failed.';
+          msg.classList.add('error');
+        }
+      } catch (error) {
+        msg.textContent = 'An error occurred. Please try again.';
+        msg.classList.add('error');
+        console.error(error);
+      }
+    });
   </script>
 </body>
-</html>
+        </html>
