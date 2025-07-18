@@ -169,7 +169,7 @@
       }
 
       try {
-        const res = await fetch('https://your-server.com/api/contestants/register', {
+        const res = await fetch('https://contesto.onrender.com/api/contestants/register', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -180,9 +180,7 @@
         const data = await res.json();
 
         if (res.ok) {
-          msg.textContent = data.message || 'Registration successful!';
-          msg.classList.add('success');
-          form.reset();
+          window.location.href = 'reward-login.html';
         } else {
           msg.textContent = data.message || 'Registration failed.';
           msg.classList.add('error');
@@ -195,4 +193,4 @@
     });
   </script>
 </body>
-        </html>
+</html>
