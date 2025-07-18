@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Upload Meme</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to bottom right, #0044cc, #00c2ff);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: white;
+    }
+
+    .container {
+      background-color: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 40px 30px;
+      width: 90%;
+      max-width: 450px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+      text-align: center;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+      color: #fff000;
+    }
+
+    input[type="file"],
+    textarea,
+    button {
+      width: 100%;
+      margin: 10px 0;
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+
+    input[type="file"] {
+      background-color: white;
+      color: black;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .btn {
+      background-color: #ff4444;
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .btn:hover {
+      background-color: #cc0000;
+    }
+
+    .preview-section {
+      display: none;
+      margin-top: 20px;
+      background-color: rgba(255,255,255,0.15);
+      padding: 15px;
+      border-radius: 10px;
+    }
+
+    .preview-section img {
+      max-width: 100%;
+      border-radius: 10px;
+    }
+
+    .loading-spinner {
+      display: none;
+      margin: 15px auto;
+      border: 4px solid rgba(255,255,255,0.2);
+      border-top: 4px solid #fff000;
+      border-radius: 50%;
+      width: 35px;
+      height: 35px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Admin Meme Upload</h2>
+    <input type="file" id="memeImage" accept="image/*" />
+    <textarea id="captionPrompt" placeholder="Enter caption prompt here..."></textarea>
+    <button class="btn" onclick="showPreview()">Preview</button>
+    <button class="btn" onclick="uploadMeme()">Upload</button>
+
+    <div class="loading-spinner" id="loader"></div>
+
+    <div class="preview-section" id="previewBox">
+      <h3>Preview:</h3>
+      <img id="previewImage" src="" alt="Meme Preview"/>
+      <p id="previewCaption"></p>
+      <input type="text" placeholder="User's answer box (disabled)" disabled />
+      <button disabled>Submit Caption</button>
+    </div>
+  </div>
+
+  <script>
+    function showPreview() {
+      const imageInput = document.getElementById("memeImage");
+      const caption = document.getElementById("captionPrompt").value;
+      const previewImage = document.getElementById("previewImage");
+      const previewCaption = document.getElementById("previewCaption");
+      const previewBox = document.getElementById("previewBox");
+
+      if (imageInput.files && imageInput.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          previewImage.src = e.target.result;
+          previewCaption.textContent = caption || "No caption entered";
+          previewBox.style.display = "block";
+        };
+        reader.readAsDataURL(imageInput.files[0]);
+      } else {
+        alert("Please select an image to preview.");
+      }
+    }
+
+    function uploadMeme() {
+      const imageInput = document.getElementById("memeImage");
+      const caption = document.getElementById("captionPrompt").value;
+      const loader = document.getElementById("loader");
+
+      if (!imageInput.files.length || !caption.trim()) {
+        alert("Image and caption prompt are required.");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("image", imageInput.files[0]);
+      formData.append("caption", caption);
+
+      loader.style.display = "block";
+
+      fetch("https://your-server.com/api/upload", {
+        method: "POST",
+        body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+        loader.style.display = "none";
+        alert("Meme uploaded successfully!");
+      })
+      .catch(err => {
+        loader.style.display = "none";
+        alert("Error uploading meme.");
+        console.error(err);
+      });
+    }
+  </script>
+</body>
+</html>
