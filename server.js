@@ -100,6 +100,26 @@ app.post('/api/contestants/register', async (req, res) => {
   }
 });
 
+// Get all contestants
+app.get('/api/contestants', async (req, res) => {
+  try {
+    const contestants = await Contestant.find().sort({ createdAt: -1 });
+    res.json(contestants);
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch contestants' });
+  }
+});
+
+// Delete contestant by ID
+app.delete('/api/contestants/:id', async (req, res) => {
+  try {
+    await Contestant.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Contestant deleted' });
+  } catch (err) {
+    res.status(500).json({ message: 'Deletion failed' });
+  }
+});
+
 // ====================
 // 📥 GET /api/memes
 // ====================
