@@ -18,7 +18,22 @@ mongoose
   .then(() => console.log('✅ MongoDB Connected'))
   .catch(err => console.error('❌ MongoDB Connection Error:', err));
 
-// Schema for Meme
+// ===================
+// 🧾 Contestant Schema
+// ===================
+const contestantSchema = new mongoose.Schema({
+  fullname: String,
+  email: String,
+  username: String,
+  password: String,
+  createdAt: { type: Date, default: Date.now }
+});
+
+const Contestant = mongoose.model('Contestant', contestantSchema);
+
+// ===================
+// 📝 Meme Schema
+// ===================
 const memeSchema = new mongoose.Schema({
   title: String,
   imageUrl: String,
@@ -27,7 +42,9 @@ const memeSchema = new mongoose.Schema({
 
 const Meme = mongoose.model('Meme', memeSchema);
 
-// Multer setup for file uploads
+// ==============================
+// 📥 Multer setup for file uploads
+// ==============================
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, 'uploads/');
@@ -40,7 +57,9 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-// POST /api/upload - Admin uploads meme
+// =============================
+// 📤 POST /api/upload - Admin uploads meme
+// =============================
 app.post('/api/upload', upload.single('image'), async (req, res) => {
   try {
     const { title } = req.body;
@@ -56,7 +75,39 @@ app.post('/api/upload', upload.single('image'), async (req, res) => {
   }
 });
 
-// GET /api/memes - Get all memes
+// =======================
+// 📥 POST /api/contestants/register
+// =======================
+app.post('/api/contestants/register', async (req, res) => {
+  try {
+    const { fullname, email, username, password } = req.body;
+
+    if (!fullname || !email || !username || !password) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
+
+    // Check if username or email already exists
+    const existingUser = await Contestant.findOne({
+      $or: [{ email }, { username }]
+    });
+
+    if (existingUser) {
+      return res.status(409).json({ message: 'Email or username already taken' });
+    }
+
+    const newContestant = new Contestant({ fullname, email, username, password });
+    await newContestant.save();
+
+    res.status(201).json({ message: 'Registration successful' });
+  } catch (err) {
+    console.error('Registration Error:', err);
+    res.status(500).json({ message: 'An error occurred during registration' });
+  }
+});
+
+// ====================
+// 📥 GET /api/memes
+// ====================
 app.get('/api/memes', async (req, res) => {
   try {
     const memes = await Meme.find().sort({ uploadedAt: -1 });
@@ -67,11 +118,15 @@ app.get('/api/memes', async (req, res) => {
   }
 });
 
-// Root endpoint
+// ====================
+// 🏠 Root endpoint
+// ====================
 app.get('/', (req, res) => {
   res.send('Meme Server is running...');
 });
 
-// Start server
+// ====================
+// 🚀 Start server
+// ====================
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server started on port ${PORT}`));
