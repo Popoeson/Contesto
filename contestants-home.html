@@ -157,17 +157,22 @@
     &copy; 2025 Contesto. All rights reserved.
   </footer>
 
-  <script>
+<script>
   // Load username from localStorage
-  const storedUser = localStorage.getItem("username");
+  const storedUser = localStorage.getItem("contestantUsername");
   document.getElementById("username").textContent = storedUser || "Contestant";
 
   // Logout function
   function logout() {
-    localStorage.removeItem("username");
+    localStorage.removeItem("contestantUsername");
     window.location.href = "index.html";
   }
-  </script>
+
+  // Optional: redirect to login if not logged in
+ // if (!storedUser) {
+  //  window.location.href = "reward-login.html";
+  //}
+</script>
 
 </body>
                               </html>
