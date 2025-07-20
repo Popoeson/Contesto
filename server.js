@@ -62,7 +62,13 @@ const upload = multer({ storage });
 app.post('/api/upload', upload.single('image'), async (req, res) => {
   try {
     const { title } = req.body;
-    const imageUrl = `/uploads/${req.file.filename}`;
+
+    // Handle missing input
+    if (!req.file || !title) {
+      return res.status(400).json({ message: 'Title and image are required.' });
+    }
+
+    const imageUrl = `/uploads/${req.file.filename}`; // for local dev
 
     const meme = new Meme({ title, imageUrl });
     await meme.save();
