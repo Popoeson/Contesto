@@ -201,7 +201,7 @@
 
         if (res.ok) {
           localStorage.setItem('contestantUsername', data.contestant.username);
-          window.location.href = 'contestants-homepage.html';
+          window.location.href = 'contestants-home.html';
         } else {
           throw new Error(data.message || 'Login failed');
         }
