@@ -126,9 +126,15 @@
   </footer>
 
   <script>
-    // Load username from localStorage
-    const storedUser = localStorage.getItem("username");
-    document.getElementById("username").textContent = storedUser || "Contestant";
+  // Load username from localStorage
+  const storedUser = localStorage.getItem("username");
+  document.getElementById("username").textContent = storedUser || "Contestant";
+
+  // Logout function
+  function logout() {
+    localStorage.removeItem("username");
+    window.location.href = "index.html";
+  }
   </script>
 
 </body>
