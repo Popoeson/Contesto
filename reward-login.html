@@ -91,25 +91,24 @@
       position: relative;
     }
 
-    button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
+    button:hover {
+      background-color: #008ecc;
     }
 
     .spinner {
-      display: inline-flex;
-      gap: 5px;
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
+      display: flex;
+      gap: 4px;
     }
 
     .spinner div {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
+      width: 6px;
+      height: 6px;
       background: white;
+      border-radius: 50%;
       animation: bounce 0.6s infinite ease-in-out;
     }
 
@@ -131,9 +130,9 @@
     }
 
     .error {
-      margin-top: 10px;
-      color: #ff7070;
+      margin-top: 12px;
       font-size: 14px;
+      color: #ff7070;
     }
   </style>
 </head>
@@ -154,10 +153,12 @@
         <input type="password" id="password" required>
         <small id="togglePassword">Show Password</small>
       </div>
-      <button type="submit" id="loginBtn">Login</button>
-      <div id="spinner" class="spinner" style="display:none;">
-        <div></div><div></div><div></div>
-      </div>
+      <button type="submit" id="loginBtn">
+        <span id="btnText">Login</span>
+        <div id="spinner" class="spinner" style="display: none;">
+          <div></div><div></div><div></div>
+        </div>
+      </button>
       <div id="errorMsg" class="error"></div>
     </form>
   </div>
@@ -167,6 +168,7 @@
     const password = document.getElementById('password');
     const loginForm = document.getElementById('loginForm');
     const loginBtn = document.getElementById('loginBtn');
+    const btnText = document.getElementById('btnText');
     const spinner = document.getElementById('spinner');
     const errorMsg = document.getElementById('errorMsg');
 
@@ -179,13 +181,14 @@
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
 
+      // Show spinner
       loginBtn.disabled = true;
-      loginBtn.textContent = '';
-      spinner.style.display = 'inline-flex';
+      btnText.style.display = 'none';
+      spinner.style.display = 'flex';
       errorMsg.textContent = '';
 
       const username = document.getElementById('username').value.trim();
-      const passwordVal = document.getElementById('password').value.trim();
+      const passwordVal = password.value.trim();
 
       try {
         const res = await fetch('https://contesto.onrender.com/api/contestants/login', {
@@ -197,16 +200,15 @@
         const data = await res.json();
 
         if (res.ok) {
-          localStorage.setItem('contestantUsername', username);
-          window.location.href = 'contestants-home.html';
+          localStorage.setItem('contestantUsername', data.contestant.username);
+          window.location.href = 'contestants-homepage.html';
         } else {
           throw new Error(data.message || 'Login failed');
         }
-
       } catch (err) {
         errorMsg.textContent = err.message;
         loginBtn.disabled = false;
-        loginBtn.textContent = 'Login';
+        btnText.style.display = 'inline';
         spinner.style.display = 'none';
       }
     });
