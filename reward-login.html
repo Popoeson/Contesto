@@ -1,130 +1,153 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Login - Caption Contest</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Contestant Login</title>
   <style>
     body {
       margin: 0;
-      padding: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(to bottom right, #003366, #005f99);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to bottom right, #0044cc, #00c2ff);
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 100vh;
-      color: #ffffff;
-    }
-
-    .form-box {
-      width: 100%;
-      max-width: 400px;
-      background: rgba(255, 255, 255, 0.05);
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 0 15px rgba(0, 0, 0, 0.4);
+      height: 100vh;
       text-align: center;
-    }
-
-    .logo-section {
-      margin-bottom: 20px;
-    }
-
-    .logo {
-      width: 80px;
-      height: auto;
-    }
-
-    .slogan {
-      margin-top: 10px;
-      font-size: 14px;
-      color: #ffdd57;
-    }
-
-    .form-title {
-      margin-bottom: 20px;
-      font-size: 22px;
-      color: #00ffaa;
-    }
-
-    .input-group {
-      margin-bottom: 15px;
-      text-align: left;
-    }
-
-    .input-group label {
-      display: block;
-      margin-bottom: 6px;
-      font-weight: 500;
-    }
-
-    .input-group input {
-      width: 100%;
-      padding: 10px;
-      border-radius: 8px;
-      border: none;
-      outline: none;
-      background-color: rgba(255, 255, 255, 0.1);
       color: white;
     }
 
-    #togglePassword {
-      display: block;
-      text-align: right;
-      font-size: 12px;
-      margin-top: 5px;
-      color: #ffd700;
-      cursor: pointer;
+    .container {
+      background-color: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 40px 30px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    h2 {
+      margin-bottom: 20px;
+      font-size: 24px;
+      color: #fff000;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
     }
 
     button {
-      margin-top: 10px;
-      width: 100%;
-      padding: 12px;
-      background-color: #00aaff;
-      border: none;
+      background-color: #ff4444;
       color: white;
+      border: none;
+      padding: 14px;
+      width: 100%;
       font-size: 16px;
-      border-radius: 10px;
+      border-radius: 30px;
       cursor: pointer;
       transition: background 0.3s ease;
     }
 
     button:hover {
-      background-color: #008ecc;
+      background-color: #cc0000;
+    }
+
+    .spinner {
+      display: none;
+      margin-top: 20px;
+    }
+
+    .spinner div {
+      width: 16px;
+      height: 16px;
+      background-color: #fff000;
+      border-radius: 100%;
+      display: inline-block;
+      animation: bouncedelay 1.4s infinite ease-in-out both;
+    }
+
+    .spinner div:nth-child(1) {
+      animation-delay: -0.32s;
+    }
+
+    .spinner div:nth-child(2) {
+      animation-delay: -0.16s;
+    }
+
+    @keyframes bouncedelay {
+      0%, 80%, 100% {
+        transform: scale(0);
+      }
+      40% {
+        transform: scale(1);
+      }
+    }
+
+    .error {
+      color: #ffdddd;
+      font-size: 14px;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
-  <div class="form-box">
-    <div class="logo-section">
-      <img src="uploads/logo.png" alt="Site Logo" class="logo">
-      <h2 class="slogan">Where Humor Meets Rewards</h2>
+  <div class="container">
+    <h2>Contestant Login</h2>
+    <input type="text" id="username" placeholder="Enter username" />
+    <input type="password" id="password" placeholder="Enter password" />
+    <button onclick="handleLogin()">Login</button>
+    
+    <div class="spinner" id="spinner">
+      <div></div>
+      <div></div>
+      <div></div>
     </div>
-    <h2 class="form-title">Welcome Back</h2>
-    <form id="loginForm">
-      <div class="input-group">
-        <label for="username">Username</label>
-        <input type="text" id="username" required>
-      </div>
-      <div class="input-group">
-        <label for="password">Password</label>
-        <input type="password" id="password" required>
-        <small id="togglePassword">Show Password</small>
-      </div>
-      <button type="submit">Login</button>
-    </form>
+    
+    <div class="error" id="error"></div>
   </div>
 
   <script>
-    const toggle = document.getElementById('togglePassword');
-    const password = document.getElementById('password');
+    async function handleLogin() {
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const errorDiv = document.getElementById('error');
+      const spinner = document.getElementById('spinner');
 
-    toggle.addEventListener('click', () => {
-      const isHidden = password.type === 'password';
-      password.type = isHidden ? 'text' : 'password';
-      toggle.textContent = isHidden ? 'Hide Password' : 'Show Password';
-    });
+      if (!username || !password) {
+        errorDiv.textContent = 'Please enter both username and password.';
+        return;
+      }
+
+      errorDiv.textContent = '';
+      spinner.style.display = 'block';
+
+      try {
+        const res = await fetch('https://contesto.onrender.com/api/contestants/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          localStorage.setItem('contestantUsername', username);
+          window.location.href = 'contestant-home.html';
+        } else {
+          spinner.style.display = 'none';
+          errorDiv.textContent = data.error || 'Login failed. Try again.';
+        }
+      } catch (err) {
+        spinner.style.display = 'none';
+        errorDiv.textContent = 'Network error. Try again.';
+      }
+    }
   </script>
 </body>
 </html>
