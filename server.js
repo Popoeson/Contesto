@@ -109,7 +109,36 @@ app.get('/api/contestants', async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch contestants' });
   }
 });
+// ✅ Contestant Login Route
+app.post('/api/contestants/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
 
+    if (!username || !password) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
+
+    // Find contestant
+    const contestant = await Contestant.findOne({ username });
+
+    if (!contestant || contestant.password !== password) {
+      return res.status(401).json({ message: 'Invalid username or password' });
+    }
+
+    // Success
+    res.status(200).json({
+      message: 'Login successful',
+      contestant: {
+        username: contestant.username,
+        phone: contestant.phone,
+        id: contestant._id
+      }
+    });
+  } catch (err) {
+    console.error('Login Error:', err);
+    res.status(500).json({ message: 'An error occurred during login' });
+  }
+});
 // Delete contestant by ID
 app.delete('/api/contestants/:id', async (req, res) => {
   try {
