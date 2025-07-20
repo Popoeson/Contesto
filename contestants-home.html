@@ -80,16 +80,45 @@
       font-size: 14px;
       color: #eee;
     }
+    #username {
+  margin-left: 1px;
+}
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+}
+
+.notification-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.welcome-message {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 24px;
+  font-weight: bold;
+  color: #fff; /* Assuming your theme is dark */
+}
   </style>
 </head>
 <body>
 
   <header>
-    <div class="notification-icon">🔔</div>
-    <button onclick="logout()" style="float: left; margin-left: 20px; background-color: #222; color: white; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer;">
+      <div class="top-bar">
+  <button onclick="logout()" style="float: left; margin-left: 20px; background-color: #cc0000; color: white; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer;">
   Logout
     </button>
-    <h1>Welcome, <span id="username"></span></h1>
+  <div class="notification-icon">🔔</div>
+</div>
+
+<!-- Centered Welcome Message -->
+<div class="welcome-message">
+  <h1>Welcome, <span id="username"></span></h1>
+</div>
+    
     <p>You're part of the challenge. Be creative, stay active, and climb the leaderboard!</p>
   </header>
 
@@ -141,4 +170,4 @@
   </script>
 
 </body>
-</html>
+                              </html>
