@@ -104,17 +104,12 @@
     // Check if user is logged in
   const username = localStorage.getItem("contestantUsername");
 
- // if (!username) {
-  //  alert("You must login first");
-  //  window.location.href = "login.html";
- // }
+ if (!username) {
+   alert("You must login first");
+    window.location.href = "login.html";
+ }
 
-  // Optionally display username somewhere on the page
-  // document.getElementById("username").textContent = username;
-    if (!localStorage.getItem('username')) {
-      alert("Please log in to participate.");
-      window.location.href = "reward-login.html";
-    }
+
 
     const submitBtn = document.getElementById("submitBtn");
     const spinner = document.getElementById("spinner");
