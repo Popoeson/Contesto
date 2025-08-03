@@ -64,13 +64,15 @@ const Contestant = mongoose.model('Contestant', contestantSchema);
 // 🖼️ Meme Schema
 // ==========================
 const memeSchema = new mongoose.Schema({
-  title: String,
+  caption: String,
   imageUrl: String,
+  public_id: String,
   uploadedAt: { type: Date, default: Date.now }
 });
 
 const Meme = mongoose.model('Meme', memeSchema);
 
+module.exports = Meme;
 // ==========================
 // 📤 Upload Meme Route
 // ==========================
