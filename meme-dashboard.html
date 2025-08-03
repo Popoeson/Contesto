@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Meme Dashboard</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #1f3b73, #29539b);
+      color: white;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 40px auto;
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px;
+      color: #000;
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    }
+    h2 {
+      text-align: center;
+      color: #1f3b73;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      padding: 12px 15px;
+      text-align: center;
+    }
+    th {
+      background-color: #1f3b73;
+      color: #fff;
+    }
+    tr:nth-child(even) {
+      background-color: #f0f4ff;
+    }
+    tr:hover {
+      background-color: #e0ecff;
+    }
+    img {
+      width: 80px;
+      height: auto;
+      border-radius: 8px;
+    }
+    button.delete-btn {
+      background-color: #e63946;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    button.delete-btn:hover {
+      background-color: #c7212c;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Meme Dashboard</h2>
+    <table id="memeTable">
+      <thead>
+        <tr>
+          <th>Preview</th>
+          <th>Caption Count</th>
+          <th>Uploaded</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Memes will be populated here -->
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    const apiBase = "https://contesto.onrender.com/api/memes";
+
+    async function fetchMemes() {
+      try {
+        const res = await fetch(apiBase);
+        const memes = await res.json();
+
+        const tbody = document.querySelector("#memeTable tbody");
+        tbody.innerHTML = "";
+
+        memes.forEach(meme => {
+          const row = document.createElement("tr");
+
+          const imageCell = `<td><img src="${meme.imageUrl}" alt="meme" /></td>`;
+          const captionCount = meme.captions ? meme.captions.length : 0;
+          const captionCell = `<td>${captionCount}</td>`;
+          const date = new Date(meme.uploadedAt || meme.createdAt).toLocaleString();
+          const dateCell = `<td>${date}</td>`;
+          const deleteCell = `
+            <td>
+              <button class="delete-btn" onclick="deleteMeme('${meme._id}')">Delete</button>
+            </td>
+          `;
+
+          row.innerHTML = imageCell + captionCell + dateCell + deleteCell;
+          tbody.appendChild(row);
+        });
+
+      } catch (err) {
+        console.error("Failed to load memes:", err);
+      }
+    }
+
+    async function deleteMeme(id) {
+      const confirmDelete = confirm("Are you sure you want to delete this meme?");
+      if (!confirmDelete) return;
+
+      try {
+        const res = await fetch(`${apiBase}/${id}`, {
+          method: "DELETE",
+        });
+
+        if (res.ok) {
+          alert("Meme deleted successfully!");
+          fetchMemes();
+        } else {
+          alert("Failed to delete meme.");
+        }
+      } catch (err) {
+        console.error("Error deleting meme:", err);
+      }
+    }
+
+    // Initial fetch
+    fetchMemes();
+  </script>
+</body>
+</html>
