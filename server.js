@@ -213,7 +213,23 @@ app.get('/api/memes', async (req, res) => {
   }
 });
 
+//=========================
+// 📸 Captions 
+//=========================
+app.post("/api/captions", async (req, res) => {
+  const { username, caption } = req.body;
+  if (!username || !caption) {
+    return res.status(400).json({ message: "Username and caption are required." });
+  }
 
+  try {
+    const saved = await Caption.create({ username, caption, timestamp: new Date() });
+    res.json({ message: "Caption saved", data: saved });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error." });
+  }
+});
 //==========================
 // 🚫 Error Handling 
 //===========================
