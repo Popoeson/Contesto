@@ -93,6 +93,29 @@ app.post('/api/upload', upload.single('image'), async (req, res) => {
   }
 });
 
+// app.post('/api/upload', upload.single('image'), async (req, res) => {
+//  try {
+//    if (!req.file || !req.body.caption) {
+//      return res.status(400).json({ error: 'Image and caption required' });
+//    }
+
+//    const uploaded = await cloudinary.uploader.upload(req.file.path);
+    
+// const meme = new Meme({
+//      imageUrl: uploaded.secure_url,
+//      public_id: uploaded.public_id,
+//      caption: req.body.caption
+//    });
+
+//    await meme.save();
+//    res.status(201).json({ message: 'Meme uploaded successfully!' });
+
+//  } catch (err) {
+//    console.error(err);
+//    res.status(500).json({ error: 'Failed to upload meme' });
+//  }
+// });
+
 // ==========================
 // 📝 Contestant Auth Routes
 // ==========================
@@ -183,6 +206,15 @@ app.get('/api/memes', async (req, res) => {
     console.error('Fetch Error:', error);
     res.status(500).json({ message: 'Failed to fetch memes' });
   }
+});
+SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+
+//==========================
+// 🚫 Error Handling 
+//===========================
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: 'Something went wrong!' });
 });
 
 // ==========================
