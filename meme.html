@@ -118,7 +118,7 @@
 
   async function loadMeme() {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/memes/today`);
+      const res = await fetch(`${API_BASE_URL}/api/upload`);
       const data = await res.json();
       if (res.ok && data.imageUrl) {
         memeImage.src = data.imageUrl;
