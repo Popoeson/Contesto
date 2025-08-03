@@ -73,6 +73,30 @@ const memeSchema = new mongoose.Schema({
 const Meme = mongoose.model('Meme', memeSchema);
 
 module.exports = Meme;
+
+//==========================
+// 📃 Caption Schema 
+//=========================
+const captionSchema = new mongoose.Schema(
+  {
+    meme: {
+      type: String, 
+      required: true,
+    },
+    username: {
+      type: String,
+      required: true,
+    },
+    caption: {
+      type: String,
+      required: true,
+      maxlength: 150,
+    },
+  },
+  { timestamps: true }
+);
+
+module.exports = mongoose.model("Caption", captionSchema);
 // ==========================
 // 📤 Upload Meme Route
 // ==========================
@@ -215,16 +239,38 @@ app.get('/api/memes', async (req, res) => {
 
 //=========================
 // 📸 Captions 
-//=========================
+//========================
 app.post("/api/captions", async (req, res) => {
-  const { username, caption } = req.body;
-  if (!username || !caption) {
-    return res.status(400).json({ message: "Username and caption are required." });
+  const { username, caption, meme } = req.body;
+
+  if (!username || !caption || !meme) {
+    return res.status(400).json({ message: "Username, caption, and meme are required." });
   }
 
   try {
-    const saved = await Caption.create({ username, caption, timestamp: new Date() });
+    const saved = await Caption.create({
+      username,
+      caption,
+      meme, // Save meme image reference (e.g., "uploads/today-meme.jpg")
+    });
+
     res.json({ message: "Caption saved", data: saved });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error." });
+  }
+});
+
+// ❌ Prevent Duplicate Caption 
+app.get("/api/captions/check", async (req, res) => {
+  const { username, meme } = req.query;
+  if (!username || !meme) {
+    return res.status(400).json({ message: "Username and meme are required." });
+  }
+
+  try {
+    const exists = await Caption.exists({ username, meme });
+    res.json({ exists: !!exists });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error." });
