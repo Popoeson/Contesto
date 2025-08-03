@@ -95,7 +95,10 @@ module.exports = Meme;
   // }
 // });
 
+
  app.post('/api/upload', upload.single('image'), async (req, res) => {
+   console.log("Received meme upload");
+   
   try {
     if (!req.file || !req.body.caption) {
       return res.status(400).json({ error: 'Image and caption required' });
