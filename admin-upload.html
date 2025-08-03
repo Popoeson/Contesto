@@ -142,10 +142,9 @@ function uploadMeme() {
     alert("Image and caption prompt are required.");
     return;
   }
-
-  const formData = new FormData();
-  formData.append("image", imageInput.files[0]);
-  formData.append("caption", caption);
+const formData = new FormData();
+formData.append("image", file); // file from input
+formData.append("title", document.getElementById("caption").value); 
 
   loader.style.display = "block";
 
