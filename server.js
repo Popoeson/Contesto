@@ -100,8 +100,8 @@ module.exports = Meme;
    console.log("Received meme upload");
    
   try {
-    if (!req.file || !req.body.caption) {
-      return res.status(400).json({ error: 'Image and caption required' });
+    if (!req.file || !req.body.title) {
+  return res.status(400).json({ message: 'Title and image are required.' });
     }
 
    const uploaded = await cloudinary.uploader.upload(req.file.path);
@@ -109,7 +109,7 @@ module.exports = Meme;
  const meme = new Meme({
       imageUrl: uploaded.secure_url,
      public_id: uploaded.public_id,
-      caption: req.body.caption
+      title: req.body.title
     });
 
     await meme.save();
