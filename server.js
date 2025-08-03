@@ -56,17 +56,17 @@ const Meme = mongoose.model('Meme', memeSchema);
 // ==============================
 // 📥 Multer setup for file uploads
 // ==============================
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/');
-  },
-  filename: function (req, file, cb) {
-    const uniqueName = `${Date.now()}-${file.originalname}`;
-    cb(null, uniqueName);
-  }
-});
+//const storage = multer.diskStorage({
+ // destination: function (req, file, cb) {
+ //   cb(null, 'uploads/');
+//  },
+  // filename: function (req, file, cb) {
+//    const uniqueName = `${Date.now()}-${file.originalname}`;
+  //  cb(null, uniqueName);
+//  }
+// });
 
-const upload = multer({ storage });
+// const upload = multer({ storage });
 
 // =============================
 // 📤 POST /api/upload - Admin uploads meme
