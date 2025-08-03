@@ -144,7 +144,7 @@ function uploadMeme() {
   }
 
   const formData = new FormData();
-  formData.append("meme", imageInput.files[0]); // 👈 match backend name
+  formData.append("image", imageInput.files[0]);
   formData.append("caption", caption);
 
   loader.style.display = "block";
