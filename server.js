@@ -212,7 +212,7 @@ app.get('/api/memes', async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch memes' });
   }
 });
-SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+
 
 //==========================
 // 🚫 Error Handling 
