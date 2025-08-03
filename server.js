@@ -4,13 +4,25 @@ const multer = require('multer');
 const cors = require('cors');
 const path = require('path');
 require('dotenv').config(); // Load .env
-
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('./cloudinaryConfig'); // or wherever you exported it
+const upload = multer({ storage });
 const app = express();
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'memes', // Optional: folder in your Cloudinary account
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif'],
+    transformation: [{ width: 800, crop: 'limit' }]
+  }
+});
 
 // MongoDB connection
 mongoose
@@ -41,6 +53,8 @@ const memeSchema = new mongoose.Schema({
 
 const Meme = mongoose.model('Meme', memeSchema);
 
+const Meme = require('./models/Meme'); // adjust path if needed
+
 // ==============================
 // 📥 Multer setup for file uploads
 // ==============================
@@ -59,16 +73,30 @@ const upload = multer({ storage });
 // =============================
 // 📤 POST /api/upload - Admin uploads meme
 // =============================
+// app.post('/api/upload', upload.single('image'), async (req, res) => {
+//  try {
+//    const { title } = req.body;
+
+    // Handle missing input
+ //   if (!req.file || !title) {
+   //   return res.status(400).json({ message: 'Title and image are required.' });
+ //   }
+
+// const imageUrl = `/uploads/${req.file.filename}`; // for local dev
+
+ //   const meme = new Meme({ title, imageUrl });
+ //   await meme.save();
+
+//    res.status(201).json({ message: 'Meme uploaded successfully', meme });
+ // } catch (error) {
+//    console.error('Upload Error:', error);
+ //   res.status(500).json({ message: 'Failed to upload meme' });
+ // }
+// });
 app.post('/api/upload', upload.single('image'), async (req, res) => {
   try {
     const { title } = req.body;
-
-    // Handle missing input
-    if (!req.file || !title) {
-      return res.status(400).json({ message: 'Title and image are required.' });
-    }
-
-    const imageUrl = `/uploads/${req.file.filename}`; // for local dev
+    const imageUrl = req.file.path; // Cloudinary gives the URL here
 
     const meme = new Meme({ title, imageUrl });
     await meme.save();
@@ -79,7 +107,6 @@ app.post('/api/upload', upload.single('image'), async (req, res) => {
     res.status(500).json({ message: 'Failed to upload meme' });
   }
 });
-
 // ✅ Contestant Registration Route
 app.post('/api/contestants/register', async (req, res) => {
   try {
