@@ -5,7 +5,6 @@ const cors = require('cors');
 const path = require('path');
 require('dotenv').config(); // Load .env
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
-const cloudinary = require('./cloudinaryConfig'); // or wherever you exported it
 const upload = multer({ storage });
 const app = express();
 
