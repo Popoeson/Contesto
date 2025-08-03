@@ -142,9 +142,11 @@ function uploadMeme() {
     alert("Image and caption prompt are required.");
     return;
   }
-const formData = new FormData();
-formData.append("image", file); // file from input
-formData.append("title", document.getElementById("caption").value); 
+
+  const file = imageInput.files[0];
+  const formData = new FormData();
+  formData.append("image", file);       // Correctly get the file
+  formData.append("title", caption);    // Use the right caption
 
   loader.style.display = "block";
 
@@ -164,6 +166,5 @@ formData.append("title", document.getElementById("caption").value);
       console.error(err);
     });
     }
-  </script>
 </body>
 </html>
