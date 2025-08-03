@@ -133,37 +133,37 @@
         alert("Please select an image to preview.");
       }
     }
+function uploadMeme() {
+  const imageInput = document.getElementById("memeImage");
+  const caption = document.getElementById("captionPrompt").value;
+  const loader = document.getElementById("loader");
 
-    function uploadMeme() {
-      const imageInput = document.getElementById("memeImage");
-      const caption = document.getElementById("captionPrompt").value;
-      const loader = document.getElementById("loader");
+  if (!imageInput.files.length || !caption.trim()) {
+    alert("Image and caption prompt are required.");
+    return;
+  }
 
-      if (!imageInput.files.length || !caption.trim()) {
-        alert("Image and caption prompt are required.");
-        return;
-      }
+  const formData = new FormData();
+  formData.append("meme", imageInput.files[0]); // 👈 match backend name
+  formData.append("caption", caption);
 
-      const formData = new FormData();
-      formData.append("image", imageInput.files[0]);
-      formData.append("caption", caption);
+  loader.style.display = "block";
 
-      loader.style.display = "block";
-
-      fetch("https://contesto.onrender.com/api/upload", {
-  method: "POST",
-  body: formData,
-})
-      .then(res => res.json())
-      .then(data => {
-        loader.style.display = "none";
-        alert("Meme uploaded successfully!");
-      })
-      .catch(err => {
-        loader.style.display = "none";
-        alert("Error uploading meme.");
-        console.error(err);
-      });
+  fetch("https://contesto.onrender.com/api/memes", {
+    method: "POST",
+    body: formData,
+  })
+    .then(res => res.json())
+    .then(data => {
+      loader.style.display = "none";
+      alert("Meme uploaded successfully!");
+      console.log(data);
+    })
+    .catch(err => {
+      loader.style.display = "none";
+      alert("Error uploading meme.");
+      console.error(err);
+    });
     }
   </script>
 </body>
