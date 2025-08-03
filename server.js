@@ -74,47 +74,47 @@ const Meme = mongoose.model('Meme', memeSchema);
 // ==========================
 // 📤 Upload Meme Route
 // ==========================
-app.post('/api/upload', upload.single('image'), async (req, res) => {
-  try {
-    const { title } = req.body;
+// app.post('/api/upload', upload.single('image'), async (req, res) => {
+  //try {
+//    const { title } = req.body;
 
-    if (!req.file || !title) {
-      return res.status(400).json({ message: 'Title and image are required.' });
+ //   if (!req.file || !title) {
+   //   return res.status(400).json({ message: 'Title and image are required.' });
+ //   }
+
+  //  const imageUrl = req.file.path; // Cloudinary hosted URL
+   // const meme = new Meme({ title, imageUrl });
+ //   await meme.save();
+
+  //  res.status(201).json({ message: 'Meme uploaded successfully', meme });
+// } catch (error) {
+ //   console.error('Upload Error:', error);
+  // res.status(500).json({ message: 'Failed to upload meme' });
+  // }
+// });
+
+ app.post('/api/upload', upload.single('image'), async (req, res) => {
+  try {
+    if (!req.file || !req.body.caption) {
+      return res.status(400).json({ error: 'Image and caption required' });
     }
 
-    const imageUrl = req.file.path; // Cloudinary hosted URL
-    const meme = new Meme({ title, imageUrl });
-    await meme.save();
-
-    res.status(201).json({ message: 'Meme uploaded successfully', meme });
-  } catch (error) {
-    console.error('Upload Error:', error);
-    res.status(500).json({ message: 'Failed to upload meme' });
-  }
-});
-
-// app.post('/api/upload', upload.single('image'), async (req, res) => {
-//  try {
-//    if (!req.file || !req.body.caption) {
-//      return res.status(400).json({ error: 'Image and caption required' });
-//    }
-
-//    const uploaded = await cloudinary.uploader.upload(req.file.path);
+   const uploaded = await cloudinary.uploader.upload(req.file.path);
     
-// const meme = new Meme({
-//      imageUrl: uploaded.secure_url,
-//      public_id: uploaded.public_id,
-//      caption: req.body.caption
-//    });
+ const meme = new Meme({
+      imageUrl: uploaded.secure_url,
+     public_id: uploaded.public_id,
+      caption: req.body.caption
+    });
 
-//    await meme.save();
-//    res.status(201).json({ message: 'Meme uploaded successfully!' });
+    await meme.save();
+    res.status(201).json({ message: 'Meme uploaded successfully!' });
 
-//  } catch (err) {
-//    console.error(err);
-//    res.status(500).json({ error: 'Failed to upload meme' });
-//  }
-// });
+  } catch (err) {
+    console.error(err);
+   res.status(500).json({ error: 'Failed to upload meme' });
+  }
+ });
 
 // ==========================
 // 📝 Contestant Auth Routes
