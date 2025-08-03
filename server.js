@@ -53,8 +53,6 @@ const memeSchema = new mongoose.Schema({
 
 const Meme = mongoose.model('Meme', memeSchema);
 
-const Meme = require('./models/Meme'); // adjust path if needed
-
 // ==============================
 // 📥 Multer setup for file uploads
 // ==============================
