@@ -117,18 +117,19 @@
   const API_BASE_URL = "https://contesto.onrender.com";
 
   async function loadMeme() {
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/upload`);
-      const data = await res.json();
-      if (res.ok && data.imageUrl) {
-        memeImage.src = data.imageUrl;
-      } else {
-        console.error("Failed to load meme:", data.message);
-      }
-    } catch (err) {
-      console.error("Error loading meme:", err);
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/memes/latest`);
+    const meme = await res.json();
+
+    if (meme && meme.imageUrl) {
+      memeImage.src = meme.imageUrl;
+    } else {
+      console.warn("No meme found or invalid format");
     }
+  } catch (err) {
+    console.error("Error loading meme:", err);
   }
+    }
 
   loadMeme();
 
