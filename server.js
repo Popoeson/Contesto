@@ -237,6 +237,22 @@ app.get('/api/memes', async (req, res) => {
   }
 });
 
+// ==========================
+// 📄 Fetch Latest Meme Only
+// ==========================
+app.get('/api/memes/latest', async (req, res) => {
+  try {
+    const latestMeme = await Meme.findOne().sort({ uploadedAt: -1 });
+    if (!latestMeme) {
+      return res.status(404).json({ message: 'No memes found' });
+    }
+    res.json(latestMeme);
+  } catch (error) {
+    console.error('Fetch Latest Meme Error:', error);
+    res.status(500).json({ message: 'Failed to fetch latest meme' });
+  }
+});
+
 //=========================
 // 📸 Captions 
 //========================
