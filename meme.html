@@ -165,16 +165,16 @@
 
   loadMeme();
 
-//  submitBtn.addEventListener("click", async () => {
- //   const caption = captionInput.value.trim();
-//    const meme = memeImage.src;
+  submitBtn.addEventListener("click", async () => {
+    const caption = captionInput.value.trim();
+    const meme = memeImage.src;
 
-  //  if (!caption) {
-  //    alert("Please enter a caption before submitting.");
-  //    return;
-  //  }
-//    spinner.style.display = "block";
- //   submitBtn.disabled = true;
+    if (!caption) {
+    alert("Please enter a caption before submitting.");
+      return;
+    }
+    spinner.style.display = "block";
+    submitBtn.disabled = true;
 
     try {
       // 🔍 Check for existing caption for this user and meme
