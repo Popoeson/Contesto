@@ -256,24 +256,25 @@ app.get('/api/memes/latest', async (req, res) => {
 //=========================
 // 📸 Captions 
 //========================
-app.post("/api/captions", async (req, res) => {
-  const { username, caption, meme } = req.body;
-
-  if (!username || !caption || !meme) {
-    return res.status(400).json({ message: "Username, caption, and meme are required." });
-  }
-
+app.post('/api/captions', async (req, res) => {
   try {
-    const saved = await Caption.create({
-      username,
-      caption,
-      meme, // Save meme image reference (e.g., "uploads/today-meme.jpg")
+    const { caption, memeId } = req.body;
+
+    if (!caption || !memeId) {
+      return res.status(400).json({ message: 'Caption and memeId are required' });
+    }
+
+    const newCaption = new Caption({
+      text: caption,
+      memeId,
     });
 
-    res.json({ message: "Caption saved", data: saved });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error." });
+    await newCaption.save();
+
+    res.status(201).json({ message: 'Caption submitted successfully', caption: newCaption });
+  } catch (error) {
+    console.error('Caption Submission Error:', error);
+    res.status(500).json({ message: 'Error submitting caption' });
   }
 });
 
