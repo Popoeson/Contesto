@@ -118,13 +118,17 @@
 
   const API_BASE_URL = "https://contesto.onrender.com";
 
-  async function loadMeme() {
+
+    let latestMemeId = null; // store the meme's _id
+
+async function loadMeme() {
   try {
     const res = await fetch(`${API_BASE_URL}/api/memes/latest`);
     const meme = await res.json();
 
-    if (meme && meme.imageUrl) {
+    if (meme && meme.imageUrl && meme._id) {
       memeImage.src = meme.imageUrl;
+      latestMemeId = meme._id;
     } else {
       console.warn("No meme found or invalid format");
     }
@@ -133,19 +137,44 @@
   }
     }
 
-  loadMeme();
+      const response = await fetch(`${API_BASE_URL}/api/captions`, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    username,
+    caption,
+    memeId: latestMemeId, // ✅ Send the actual memeId
+  }),
+});
+//  async function loadMeme() {
+//  try {
+//    const res = await fetch(`${API_BASE_URL}/api/memes/latest`);
+//    const meme = await res.json();
 
-  submitBtn.addEventListener("click", async () => {
-    const caption = captionInput.value.trim();
-    const meme = memeImage.src;
+//    if (meme && meme.imageUrl) {
+ //     memeImage.src = meme.imageUrl;
+ //   } else {
+ //     console.warn("No meme found or invalid format");
+ //   }
+//  } catch (err) {
+//    console.error("Error loading meme:", err)
+//    }
+  //  }
 
-    if (!caption) {
-      alert("Please enter a caption before submitting.");
-      return;
-    }
+//  loadMeme();
 
-    spinner.style.display = "block";
-    submitBtn.disabled = true;
+//  submitBtn.addEventListener("click", async () => {
+ //   const caption = captionInput.value.trim();
+//    const meme = memeImage.src;
+
+  //  if (!caption) {
+  //    alert("Please enter a caption before submitting.");
+  //    return;
+  //  }
+//    spinner.style.display = "block";
+ //   submitBtn.disabled = true;
 
     try {
       // 🔍 Check for existing caption for this user and meme
