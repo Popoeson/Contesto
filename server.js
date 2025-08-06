@@ -254,19 +254,20 @@ app.get('/api/memes/latest', async (req, res) => {
 });
 
 //=========================
-// 📸 Captions 
-//========================
+// 📸 Submit Caption Route
+//=========================
 app.post('/api/captions', async (req, res) => {
   try {
-    const { caption, memeId } = req.body;
+    const { meme, username, caption } = req.body;
 
-    if (!caption || !memeId) {
-      return res.status(400).json({ message: 'Caption and memeId are required' });
+    if (!meme || !username || !caption) {
+      return res.status(400).json({ message: 'Meme, username, and caption are required' });
     }
 
     const newCaption = new Caption({
-      text: caption,
-      memeId,
+      meme,
+      username,
+      caption,
     });
 
     await newCaption.save();
@@ -280,13 +281,13 @@ app.post('/api/captions', async (req, res) => {
 
 // ❌ Prevent Duplicate Caption 
 app.get("/api/captions/check", async (req, res) => {
-  const { username, meme } = req.query;
-  if (!username || !meme) {
-    return res.status(400).json({ message: "Username and meme are required." });
+  const { username, meme, caption} = req.query;
+  if (!username || !meme || !caption) {
+    return res.status(400).json({ message: "Username, meme and caption are required." });
   }
 
   try {
-    const exists = await Caption.exists({ username, meme });
+    const exists = await Caption.exists({ username, meme, caption });
     res.json({ exists: !!exists });
   } catch (err) {
     console.error(err);
