@@ -106,6 +106,7 @@ const Caption = mongoose.model("Caption", captionSchema)
 ‎module.exports = {
 ‎  Caption,
 ‎  Meme,
+  Contestant
 ‎};
 // ==========================
 // 📤 Upload Meme Route
