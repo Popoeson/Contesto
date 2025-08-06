@@ -103,7 +103,7 @@ const Contestant = mongoose.model('Contestant', contestantSchema);
 const Meme = mongoose.model('Meme', memeSchema);
 const Caption = mongoose.model("Caption", captionSchema)
   ‎
-// Export models together
+// Export Models
 module.exports = {
   Caption,
   Meme,
