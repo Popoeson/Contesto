@@ -96,7 +96,14 @@
           const row = document.createElement("tr");
 
           const imageCell = `<td><img src="${meme.imageUrl}" alt="meme" /></td>`;
-          const captionCount = meme.captionCount || 0;
+          const captionCounts = await Caption.aggregate([
+          {
+                $group: {
+                _id: "$memeId",
+                count: { $sum: 1 },
+               }
+           }
+          ]);
           const captionCell = `<td>${captionCount}</td>`;
           const date = new Date(meme.uploadedAt || meme.createdAt).toLocaleString();
           const dateCell = `<td>${date}</td>`;
