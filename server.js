@@ -58,7 +58,7 @@ const contestantSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-const Contestant = mongoose.model('Contestant', contestantSchema);
+
 
 // ==========================
 // 🖼️ Meme Schema
@@ -70,9 +70,9 @@ const memeSchema = new mongoose.Schema({
   uploadedAt: { type: Date, default: Date.now }
 });
 
-const Meme = mongoose.model('Meme', memeSchema);
 
-module.exports = Meme;
+
+// module.exports = Meme;
 
 //==========================
 // 📃 Caption Schema 
@@ -96,7 +96,17 @@ const captionSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Caption", captionSchema);
+// module.exports = mongoose.model("Caption", captionSchema);
+
+// Models
+const Contestant = mongoose.model('Contestant', contestantSchema);
+const Meme = mongoose.model('Meme', memeSchema);
+const Caption = mongoose.model("Caption", captionSchema)
+  ‎// Export models together
+‎module.exports = {
+‎  Caption,
+‎  Meme,
+‎};
 // ==========================
 // 📤 Upload Meme Route
 // ==========================
