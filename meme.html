@@ -119,35 +119,7 @@
   const API_BASE_URL = "https://contesto.onrender.com";
 
 
- //   let latestMemeId = null; // store the meme's _id
 
-// async function loadMeme() {
-//  try {
-//    const res = await fetch(`${API_BASE_URL}/api/memes/latest`);
-  //  const meme = await res.json();
-
-//    if (meme && meme.imageUrl && meme._id) {
-//      memeImage.src = meme.imageUrl;
-//      latestMemeId = meme._id;
-//    } else {
- //     console.warn("No meme found or invalid format");
-  //  }
-  // } catch (err) {
- //   console.error("Error loading meme:", err);
- // }
-//    }
-
-  //    const response = await fetch(`${API_BASE_URL}/api/captions`, {
-//  method: "POST",
-//  headers: {
-//    "Content-Type": "application/json",
-//  },
-//  body: JSON.stringify({
-//    username,
-//    caption,
-//    memeId: latestMemeId, // ✅ Send the actual memeId
-//  }),
-// });
    async function loadMeme() {
   try {
     const res = await fetch(`${API_BASE_URL}/api/memes/latest`);
