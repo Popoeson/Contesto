@@ -255,7 +255,6 @@ app.get('/api/memes/latest', async (req, res) => {
 
 //=========================
 // 📸 Submit Caption Route
-//=========================
 app.post('/api/captions', async (req, res) => {
   try {
     const { meme, username, caption } = req.body;
@@ -264,15 +263,19 @@ app.post('/api/captions', async (req, res) => {
       return res.status(400).json({ message: 'Meme, username, and caption are required' });
     }
 
-    const newCaption = new Caption({
-      meme,
-      username,
-      caption,
-    });
+    // 🛑 Prevent duplicate caption submission
+    const exists = await Caption.exists({ username, meme, caption });
 
+    if (exists) {
+      return res.status(409).json({ message: 'Duplicate caption: You have already submitted this caption for this meme.' });
+    }
+
+    // ✅ Save new caption
+    const newCaption = new Caption({ meme, username, caption });
     await newCaption.save();
 
     res.status(201).json({ message: 'Caption submitted successfully', caption: newCaption });
+
   } catch (error) {
     console.error('Caption Submission Error:', error);
     res.status(500).json({ message: 'Error submitting caption' });
@@ -280,20 +283,20 @@ app.post('/api/captions', async (req, res) => {
 });
 
 // ❌ Prevent Duplicate Caption 
-app.get("/api/captions/check", async (req, res) => {
-  const { username, meme, caption} = req.query;
-  if (!username || !meme || !caption) {
-    return res.status(400).json({ message: "Username, meme and caption are required." });
-  }
+// app.get("/api/captions/check", async (req, res) => {
+ // const { username, meme, caption} = req.query;
+//  if (!username || !meme || !caption) {
+//    return res.status(400).json({ message: "Username, meme and caption are required." });
+//  }
 
-  try {
-    const exists = await Caption.exists({ username, meme, caption });
-    res.json({ exists: !!exists });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error." });
-  }
-});
+//  try {
+ //   const exists = await Caption.exists({ username, meme, caption });
+//    res.json({ exists: !!exists });
+//  } catch (err) {
+ //   console.error(err);
+  //  res.status(500).json({ message: "Server error." });
+  //}
+// });
 //==========================
 // 🚫 Error Handling 
 //===========================
