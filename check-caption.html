@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Contesto Caption Dashboard</title>
+  <style>
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(to right, royalblue, blue);
+    color: #fff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+   .search-sort-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .search-sort-container input,
+    .search-sort-container button {
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+
+    .search-sort-container input {
+      background: #333;
+      color: #fff;
+    }
+
+    .search-sort-container button {
+      background-color: skyblue;
+      color: #000;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+    justify-content: center;
+  }
+
+  .controls input,
+  .controls button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+  }
+
+  .controls input {
+    width: 200px;
+    max-width: 80vw;
+  }
+
+  .controls button {
+    background-color: #004aad;
+    color: white;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+
+  .controls button:hover {
+    background-color: #00398c;
+  }
+
+  #captionsContainer {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    width: 100%;
+    max-width: 1100px;
+  }
+
+  .caption-card {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    transition: transform 0.2s;
+  }
+
+  .caption-card:hover {
+    transform: translateY(-5px);
+  }
+
+  .caption-card img {
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+    margin-bottom: 10px;
+  }
+
+  .caption-card .meta {
+    font-size: 0.9rem;
+    color: #d0f0ff;
+    margin-bottom: 5px;
+  }
+
+  .caption-card .text {
+    font-size: 1rem;
+    font-style: italic;
+    color: #fff;
+  }
+
+  #pagination {
+    margin-top: 25px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
+
+  #pagination button {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 6px;
+    background-color: white;
+    color: #004aad;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  #pagination button:hover {
+    background-color: #e0e0e0;
+  }
+
+  @media screen and (max-width: 600px) {
+    h1 {
+      font-size: 1.5rem;
+    }
+
+    .caption-card .meta,
+    .caption-card .text {
+      font-size: 0.9rem;
+    }
+  }
+</style>
+</head>
+<body>
+  <h1>🌟 Contesto Captions Dashboard</h1>
+
+  <div class="search-sort-container">
+    <input type="text" id="searchInput" placeholder="Search by username..." />
+    <button id="toggleSortBtn">Sort: Oldest → Newest</button>
+  </div>
+
+  <div id="captionsContainer"></div>
+
+  <div class="pagination" id="pagination"></div>
+
+ <script>
+  const API_URL = "https://contesto.onrender.com/api/caption-check";
+  let currentPage = 1;
+  const limit = 15;
+  let sortOrder = "asc"; // Default sort: oldest to newest
+
+  async function fetchCaptions(page = 1, sort = "asc", search = "") {
+    const res = await fetch(`${API_URL}?page=${page}&limit=${limit}&sort=${sort}`);
+    const captions = await res.json(); // ✅ It's an array already
+
+    if (search.trim()) {
+      filteredCaptions = captions.filter(c => c.username?.toLowerCase().includes(search.toLowerCase()));
+    } else {
+      filteredCaptions = captions;
+    }
+
+    renderCaptions(filteredCaptions);
+    renderPagination(Math.ceil(filteredCaptions.length / limit)); // Optional: adjust if backend sends paginated result
+  }
+
+  function renderCaptions(captions) {
+    const container = document.getElementById("captionsContainer");
+    container.innerHTML = "";
+
+    if (!captions || captions.length === 0) {
+      container.innerHTML = "<p>No captions found.</p>";
+      return;
+    }
+
+    captions.forEach(item => {
+      const card = document.createElement("div");
+      card.className = "caption-card";
+      card.innerHTML = `
+        <img src="${item.meme}" alt="Meme" />
+        <div class="meta">Caption by: @${item.username}</div>
+        <div class="meta">🕒 Posted on: ${new Date(item.createdAt).toLocaleString()}</div>
+        <div class="text">💬 “${item.caption}”</div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  function renderPagination(totalPages) {
+    const pagination = document.getElementById("pagination");
+    pagination.innerHTML = "";
+
+    for (let i = 1; i <= totalPages; i++) {
+      const btn = document.createElement("button");
+      btn.innerText = i;
+      btn.onclick = () => {
+        currentPage = i;
+        const searchVal = document.getElementById("searchInput").value;
+        fetchCaptions(currentPage, sortOrder, searchVal);
+      };
+      pagination.appendChild(btn);
+    }
+  }
+
+  document.getElementById("toggleSortBtn").onclick = () => {
+    sortOrder = sortOrder === "asc" ? "desc" : "asc";
+    document.getElementById("toggleSortBtn").innerText = `Sort: ${sortOrder === "asc" ? "Oldest → Newest" : "Newest → Oldest"}`;
+    fetchCaptions(currentPage, sortOrder, document.getElementById("searchInput").value);
+  };
+
+  document.getElementById("searchInput").oninput = (e) => {
+    const searchVal = e.target.value;
+    fetchCaptions(1, sortOrder, searchVal);
+  };
+
+  // Initial load
+  fetchCaptions();
+</script>
+</body>
+</html>
