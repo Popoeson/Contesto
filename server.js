@@ -309,6 +309,20 @@ app.post('/api/captions', async (req, res) => {
     res.status(500).json({ message: "Server error." });
   }
  });
+
+//===============================
+// 📌 Get all submitted captions
+//======≠=========================
+app.get('/api/caption-check', async (req, res) => {
+  try {
+    const captions = await Caption.find().sort({ createdAt: -1 });
+    res.status(200).json(captions);
+  } catch (err) {
+    console.error("❌ Error fetching captions:", err);
+    res.status(500).json({ message: "Server error fetching captions." });
+  }
+});
+
 //==========================
 // 🚫 Error Handling 
 //===========================
