@@ -101,9 +101,9 @@ const captionSchema = new mongoose.Schema(
 // Models
 const Contestant = mongoose.model('Contestant', contestantSchema);
 const Meme = mongoose.model('Meme', memeSchema);
-const Caption = mongoose.model("Caption", captionSchema)
-  ‎
-// Export Models
+const Caption = mongoose.model("Caption", captionSchema);
+
+// Export models together
 module.exports = {
   Caption,
   Meme,
