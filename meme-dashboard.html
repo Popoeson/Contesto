@@ -96,7 +96,7 @@
           const row = document.createElement("tr");
 
           const imageCell = `<td><img src="${meme.imageUrl}" alt="meme" /></td>`;
-          const captionCount = meme.captions ? meme.captions.length : 0;
+          const captionCount = meme.captionCount || 0;
           const captionCell = `<td>${captionCount}</td>`;
           const date = new Date(meme.uploadedAt || meme.createdAt).toLocaleString();
           const dateCell = `<td>${date}</td>`;
