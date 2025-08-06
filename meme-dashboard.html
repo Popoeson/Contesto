@@ -82,68 +82,60 @@
   </div>
 
   <script>
-    const apiBase = "https://contesto.onrender.com/api/memes";
+  const apiBase = "https://contesto.onrender.com/api/memes";
 
-    async function fetchMemes() {
-      try {
-        const res = await fetch(apiBase);
-        const memes = await res.json();
+  async function fetchMemes() {
+    try {
+      const res = await fetch(apiBase);
+      const memes = await res.json();
 
-        const tbody = document.querySelector("#memeTable tbody");
-        tbody.innerHTML = "";
+      const tbody = document.querySelector("#memeTable tbody");
+      tbody.innerHTML = "";
 
-        memes.forEach(meme => {
-          const row = document.createElement("tr");
+      memes.forEach(meme => {
+        const row = document.createElement("tr");
 
-          const imageCell = `<td><img src="${meme.imageUrl}" alt="meme" /></td>`;
-          const captionCounts = await Caption.aggregate([
-          {
-                $group: {
-                _id: "$memeId",
-                count: { $sum: 1 },
-               }
-           }
-          ]);
-          const captionCell = `<td>${captionCount}</td>`;
-          const date = new Date(meme.uploadedAt || meme.createdAt).toLocaleString();
-          const dateCell = `<td>${date}</td>`;
-          const deleteCell = `
-            <td>
-              <button class="delete-btn" onclick="deleteMeme('${meme._id}')">Delete</button>
-            </td>
-          `;
+        const imageCell = `<td><img src="${meme.imageUrl}" alt="meme" /></td>`;
+        const captionCell = `<td>${meme.captionCount || 0}</td>`;
+        const date = new Date(meme.createdAt || meme.uploadedAt).toLocaleString();
+        const dateCell = `<td>${date}</td>`;
+        const deleteCell = `
+          <td>
+            <button class="delete-btn" onclick="deleteMeme('${meme._id}')">Delete</button>
+          </td>
+        `;
 
-          row.innerHTML = imageCell + captionCell + dateCell + deleteCell;
-          tbody.appendChild(row);
-        });
+        row.innerHTML = imageCell + captionCell + dateCell + deleteCell;
+        tbody.appendChild(row);
+      });
 
-      } catch (err) {
-        console.error("Failed to load memes:", err);
-      }
+    } catch (err) {
+      console.error("Failed to load memes:", err);
     }
+  }
 
-    async function deleteMeme(id) {
-      const confirmDelete = confirm("Are you sure you want to delete this meme?");
-      if (!confirmDelete) return;
+  async function deleteMeme(id) {
+    const confirmDelete = confirm("Are you sure you want to delete this meme?");
+    if (!confirmDelete) return;
 
-      try {
-        const res = await fetch(`${apiBase}/${id}`, {
-          method: "DELETE",
-        });
+    try {
+      const res = await fetch(`${apiBase}/${id}`, {
+        method: "DELETE",
+      });
 
-        if (res.ok) {
-          alert("Meme deleted successfully!");
-          fetchMemes();
-        } else {
-          alert("Failed to delete meme.");
-        }
-      } catch (err) {
-        console.error("Error deleting meme:", err);
+      if (res.ok) {
+        alert("Meme deleted successfully!");
+        fetchMemes();
+      } else {
+        alert("Failed to delete meme.");
       }
+    } catch (err) {
+      console.error("Error deleting meme:", err);
     }
+  }
 
-    // Initial fetch
-    fetchMemes();
+  // Initial fetch
+  fetchMemes();
   </script>
 </body>
 </html>
