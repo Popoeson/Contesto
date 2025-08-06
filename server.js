@@ -244,24 +244,24 @@ app.delete('/api/contestants/:id', async (req, res) => {
 // ==========================
 // 📄 Fetch Memes
 // ==========================
-app.get('/api/memes', async (req, res) => {
+app.get("/api/memes", async (req, res) => {
   try {
-    const memes = await Meme.find().sort({ uploadedAt: -1 }).lean();
+    const memes = await Meme.find().sort({ createdAt: -1 });
 
-    const memesWithCaptionCounts = await Promise.all(
-      memes.map(async (meme) => {
-        const count = await Caption.countDocuments({ meme: meme._id });
-        return {
-          ...meme,
-          captionCount: count,
-        };
-      })
-    );
+    // For each meme, count how many captions it has
+    const memesWithCounts = await Promise.all(memes.map(async (meme) => {
+      const count = await Caption.countDocuments({ meme: meme.imageUrl }); // or meme._id if using ID
+      return {
+        _id: meme._id,
+        imageUrl: meme.imageUrl,
+        createdAt: meme.createdAt,
+        captionCount: count,
+      };
+    }));
 
-    res.json(memesWithCaptionCounts);
-  } catch (error) {
-    console.error('Fetch Error:', error);
-    res.status(500).json({ message: 'Failed to fetch memes' });
+    res.json(memesWithCounts);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch memes" });
   }
 });
 
