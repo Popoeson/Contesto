@@ -294,7 +294,7 @@ app.post('/api/captions', async (req, res) => {
   }
 });
 
- ❌ Prevent Duplicate Caption 
+ // ❌ Prevent Duplicate Caption 
  app.get("/api/captions/check", async (req, res) => {
   const { username, meme, caption} = req.query;
   if (!username || !meme || !caption) {
