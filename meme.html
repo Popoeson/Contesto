@@ -150,7 +150,7 @@
 
     try {
       // 🔍 Check for existing caption for this user and meme
-      const checkRes = await fetch(`${API_BASE_URL}/api/captions/check?username=${encodeURIComponent(username)}&meme=${encodeURIComponent(meme)}`);
+      const checkRes = await fetch(`${API_BASE_URL}/api/captions/check?username=${encodeURIComponent(username)}&meme=${encodeURIComponent(meme)}&caption=${encodeURIComponent(caption)}`);
       const checkData = await checkRes.json();
 
       if (checkRes.ok && checkData.exists) {
