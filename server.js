@@ -294,21 +294,21 @@ app.post('/api/captions', async (req, res) => {
   }
 });
 
-// ❌ Prevent Duplicate Caption 
-// app.get("/api/captions/check", async (req, res) => {
- // const { username, meme, caption} = req.query;
-//  if (!username || !meme || !caption) {
-//    return res.status(400).json({ message: "Username, meme and caption are required." });
-//  }
+ ❌ Prevent Duplicate Caption 
+ app.get("/api/captions/check", async (req, res) => {
+  const { username, meme, caption} = req.query;
+  if (!username || !meme || !caption) {
+    return res.status(400).json({ message: "Username, meme and caption are required." });
+  }
 
-//  try {
- //   const exists = await Caption.exists({ username, meme, caption });
-//    res.json({ exists: !!exists });
-//  } catch (err) {
- //   console.error(err);
-  //  res.status(500).json({ message: "Server error." });
-  //}
-// });
+  try {
+    const exists = await Caption.exists({ username, meme, caption });
+    res.json({ exists: !!exists });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error." });
+  }
+ });
 //==========================
 // 🚫 Error Handling 
 //===========================
