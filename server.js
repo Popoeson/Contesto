@@ -102,12 +102,13 @@ const captionSchema = new mongoose.Schema(
 const Contestant = mongoose.model('Contestant', contestantSchema);
 const Meme = mongoose.model('Meme', memeSchema);
 const Caption = mongoose.model("Caption", captionSchema)
-  ‎// Export models together
-‎module.exports = {
-‎  Caption,
-‎  Meme,
+  ‎
+// Export models together
+module.exports = {
+  Caption,
+  Meme,
   Contestant
-‎};
+};
 // ==========================
 // 📤 Upload Meme Route
 // ==========================
