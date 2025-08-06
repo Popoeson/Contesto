@@ -65,6 +65,11 @@ const contestantSchema = new mongoose.Schema({
 // ==========================
 const memeSchema = new mongoose.Schema({
   caption: String,
+  memeId: {
+      type: mongoose.Schema.Types.ObjectId, // this is the link to the Meme collection
+      ref: 'Meme',
+      required: true,
+    },
   imageUrl: String,
   public_id: String,
   uploadedAt: { type: Date, default: Date.now }
@@ -280,21 +285,21 @@ app.get('/api/memes/latest', async (req, res) => {
 // 📸 Submit Caption Route
 app.post('/api/captions', async (req, res) => {
   try {
-    const { meme, username, caption } = req.body;
+    const { meme, memeId, username, caption } = req.body;
 
     if (!meme || !username || !caption) {
       return res.status(400).json({ message: 'Meme, username, and caption are required' });
     }
 
     // 🛑 Prevent duplicate caption submission
-    const exists = await Caption.exists({ username, meme, caption });
+    const exists = await Caption.exists({ username, meme, memeId, caption });
 
     if (exists) {
       return res.status(409).json({ message: 'Duplicate caption: You have already submitted this caption for this meme.' });
     }
 
     // ✅ Save new caption
-    const newCaption = new Caption({ meme, username, caption });
+    const newCaption = new Caption({ meme, memeId, username, caption });
     await newCaption.save();
 
     res.status(201).json({ message: 'Caption submitted successfully', caption: newCaption });
@@ -307,7 +312,7 @@ app.post('/api/captions', async (req, res) => {
 
  // ❌ Prevent Duplicate Caption 
  app.get("/api/captions/check", async (req, res) => {
-  const { username, meme, caption} = req.query;
+  const { username, memeId, meme, caption} = req.query;
   if (!username || !meme || !caption) {
     return res.status(400).json({ message: "Username, meme and caption are required." });
   }
