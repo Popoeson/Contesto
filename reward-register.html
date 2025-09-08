@@ -227,7 +227,7 @@
       }
 
       try {
-        const checkRes = await fetch(`https://contesto.onrender.com/api/contestants/check-username?username=${username}`);
+        const checkRes = await fetch(`https://contesto.onrender.com/api/users/check-username?username=${username}`);
         const checkData = await checkRes.json();
 
         if (checkRes.ok && checkData.exists) {
@@ -237,7 +237,7 @@
           return;
         }
 
-        const res = await fetch('https://contesto.onrender.com/api/contestants/register', {
+        const res = await fetch('https://contesto.onrender.com/api/users/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ fullname, email, username, phone, password: pwd }),
