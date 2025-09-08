@@ -49,15 +49,13 @@ mongoose
   .catch(err => console.error('❌ MongoDB Connection Error:', err));
 
 
-// ==========================
-// 👤 User Schema
-// ==========================
 const userSchema = new mongoose.Schema({
-  fullName: { type: String, required: true },
+  fullname: { type: String, required: true },
   username: { type: String, required: true, unique: true },
-  email: { type: String, required: true, unique: true },
+  email: { type: String, required: true },
   phone: { type: String, required: true },
-  password: { type: String, required: true }, 
+  password: { type: String, required: true },
+  status: { type: String, enum: ['active', 'inactive'], default: 'active' }, // 👈 NEW
   createdAt: { type: Date, default: Date.now }
 });
 
@@ -220,37 +218,36 @@ app.post('/api/users/register', async (req, res) => {
 });
 
 
-
-// Get all contestants
-app.get('/api/contestants', async (req, res) => {
-  try {
-    const contestants = await Contestant.find().sort({ createdAt: -1 });
-    res.json(contestants);
-  } catch (err) {
-    res.status(500).json({ message: 'Failed to fetch contestants' });
-  }
-});
-
-// Login
-app.post('/api/contestants/login', async (req, res) => {
+// ==========================
+// 🔑 User Login
+// ==========================
+app.post('/api/users/login', async (req, res) => {
   try {
     const { username, password } = req.body;
 
     if (!username || !password) {
-      return res.status(400).json({ message: 'All fields are required' });
+      return res.status(400).json({ message: 'Username and password are required' });
     }
 
-    const contestant = await Contestant.findOne({ username });
-    if (!contestant || contestant.password !== password) {
-      return res.status(401).json({ message: 'Invalid username or password' });
+    const user = await User.findOne({ username });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
     }
 
-    res.status(200).json({
+    // Plain password check (⚠️ no hashing yet)
+    if (user.password !== password) {
+      return res.status(401).json({ message: 'Invalid password' });
+    }
+
+    res.json({
       message: 'Login successful',
-      contestant: {
-        username: contestant.username,
-        phone: contestant.phone,
-        id: contestant._id
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        username: user.username,
+        email: user.email,
+        phone: user.phone,
+        createdAt: user.createdAt
       }
     });
   } catch (err) {
@@ -259,18 +256,119 @@ app.post('/api/contestants/login', async (req, res) => {
   }
 });
 
+
 // ==========================
-// ❌ Delete Contestant
+// 👤 Get User by ID
 // ==========================
-app.delete('/api/contestants/:id', async (req, res) => {
+app.get('/api/users/:id', async (req, res) => {
   try {
-    await Contestant.findByIdAndDelete(req.params.id);
-    res.json({ message: 'Contestant deleted' });
+    const { id } = req.params;
+    const user = await User.findById(id);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json({
+      id: user._id,
+      fullName: user.fullName,
+      username: user.username,
+      email: user.email,
+      phone: user.phone,
+      createdAt: user.createdAt
+    });
   } catch (err) {
-    res.status(500).json({ message: 'Deletion failed' });
+    console.error('Get User Error:', err);
+    res.status(500).json({ message: 'Failed to fetch user' });
   }
 });
 
+
+// ==========================
+// 📋 Get All Users (Admin)
+// ==========================
+app.get('/api/users', async (req, res) => {
+  try {
+    const users = await User.find().sort({ createdAt: -1 });
+
+    res.json(users.map(user => ({
+      id: user._id,
+      fullName: user.fullName,
+      username: user.username,
+      email: user.email,
+      phone: user.phone,
+      createdAt: user.createdAt
+    })));
+  } catch (err) {
+    console.error('Get All Users Error:', err);
+    res.status(500).json({ message: 'Failed to fetch users' });
+  }
+});
+
+// ==========================
+// 🔴 Deactivate User (Admin)
+// ==========================
+app.patch('/api/users/:id/deactivate', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const user = await User.findByIdAndUpdate(
+      id,
+      { status: 'inactive' },
+      { new: true }
+    );
+
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    res.json({ message: 'User deactivated successfully', user });
+  } catch (err) {
+    console.error('Deactivate User Error:', err);
+    res.status(500).json({ message: 'Failed to deactivate user' });
+  }
+});
+
+
+// ==========================
+// 🟢 Activate User (Admin)
+// ==========================
+app.patch('/api/users/:id/activate', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const user = await User.findByIdAndUpdate(
+      id,
+      { status: 'active' },
+      { new: true }
+    );
+
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    res.json({ message: 'User activated successfully', user });
+  } catch (err) {
+    console.error('Activate User Error:', err);
+    res.status(500).json({ message: 'Failed to activate user' });
+  }
+});
+
+// ==========================
+// ❌ Delete User (Admin)
+// ==========================
+app.delete('/api/users/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const user = await User.findByIdAndDelete(id);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json({ message: 'User deleted successfully' });
+  } catch (err) {
+    console.error('Delete User Error:', err);
+    res.status(500).json({ message: 'Failed to delete user' });
+  }
+});
 // ==========================
 // 📄 Fetch Memes
 // ==========================
