@@ -14,11 +14,12 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      position: relative;
     }
 
     .form-box {
       width: 100%;
-      min-height: 80vh; /* full viewport height */
+      min-height: 80vh;
       background: rgba(255, 255, 255, 0.05);
       padding: 40px 20px;
       display: grid;
@@ -58,7 +59,7 @@
       display: block;
       margin-bottom: 6px;
       font-weight: 500;
-      font-size: 20px
+      font-size: 20px;
     }
 
     .input-group input {
@@ -110,6 +111,34 @@
     .success {
       color: #32ff7e;
     }
+
+    /* Loader Overlay */
+    .overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(5px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      display: none;
+    }
+
+    .spinner {
+      border: 8px solid rgba(255, 255, 255, 0.2);
+      border-top: 8px solid #00aaff;
+      border-radius: 50%;
+      width: 70px;
+      height: 70px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
@@ -157,12 +186,18 @@
     </form>
   </div>
 
+  <!-- Loader Overlay -->
+  <div class="overlay" id="overlay">
+    <div class="spinner"></div>
+  </div>
+
   <script>
     const toggle = document.getElementById('togglePassword');
     const password = document.getElementById('password');
     const confirmPassword = document.getElementById('confirmPassword');
     const form = document.getElementById('registerForm');
     const msg = document.getElementById('msg');
+    const overlay = document.getElementById('overlay');
 
     toggle.addEventListener('click', () => {
       const isHidden = password.type === 'password';
@@ -172,6 +207,7 @@
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
+      overlay.style.display = 'flex'; // Show overlay when submitting
 
       const fullname = document.getElementById('fullname').value.trim();
       const email = document.getElementById('email').value.trim();
@@ -184,6 +220,7 @@
       msg.className = 'message';
 
       if (pwd !== confirmPwd) {
+        overlay.style.display = 'none';
         msg.textContent = 'Passwords do not match!';
         msg.classList.add('error');
         return;
@@ -194,6 +231,7 @@
         const checkData = await checkRes.json();
 
         if (checkRes.ok && checkData.exists) {
+          overlay.style.display = 'none';
           msg.textContent = `Username already exists! Try: ${username}${Math.floor(Math.random() * 1000)}`;
           msg.classList.add('error');
           return;
@@ -206,6 +244,7 @@
         });
 
         const data = await res.json();
+        overlay.style.display = 'none';
 
         if (res.ok) {
           window.location.href = 'reward-login.html';
@@ -214,6 +253,7 @@
           msg.classList.add('error');
         }
       } catch (error) {
+        overlay.style.display = 'none';
         msg.textContent = 'An error occurred. Please try again.';
         msg.classList.add('error');
         console.error(error);
