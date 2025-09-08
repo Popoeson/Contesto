@@ -247,7 +247,9 @@
         overlay.style.display = 'none';
 
         if (res.ok) {
-          window.location.href = 'reward-login.html';
+  localStorage.setItem("userId", data.userId); // save temporary user ID
+  window.location.href = "set-profile.html";
+    }
         } else {
           msg.textContent = data.message || 'Registration failed.';
           msg.classList.add('error');
