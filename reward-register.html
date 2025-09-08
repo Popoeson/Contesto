@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Register - Caption Contest</title>
+  <title>Register- Contesto</title>
   <style>
     body {
       margin: 0;
@@ -112,14 +112,23 @@
   <div class="form-box">
     <div class="logo-section">
       <img src="uploads/logo.png" alt="Site Logo" class="logo">
-      <h2 class="slogan">Where Humor Meets Rewards</h2>
+     <!-- <h2 class="slogan">Where Humor Meets Rewards</h2> -->
     </div>
     <h2 class="form-title">Create an Account</h2>
     <form id="registerForm">
+        <div class="input-group">
+  <label for="fullname">Full Name</label>
+  <input type="text" id="fullname" required>
+</div>
+
       <div class="input-group">
         <label for="username">Username</label>
         <input type="text" id="username" required>
       </div>
+      <div class="input-group">
+  <label for="email">Email</label>
+  <input type="email" id="email" required>
+</div>
       <div class="input-group">
         <label for="phone">Phone Number</label>
         <input type="tel" id="phone" required>
@@ -139,58 +148,69 @@
   </div>
 
   <script>
-    const toggle = document.getElementById('togglePassword');
-    const password = document.getElementById('password');
-    const confirmPassword = document.getElementById('confirmPassword');
-    const form = document.getElementById('registerForm');
-    const msg = document.getElementById('msg');
+  const toggle = document.getElementById('togglePassword');
+  const password = document.getElementById('password');
+  const confirmPassword = document.getElementById('confirmPassword');
+  const form = document.getElementById('registerForm');
+  const msg = document.getElementById('msg');
 
-    toggle.addEventListener('click', () => {
-      const isHidden = password.type === 'password';
-      password.type = confirmPassword.type = isHidden ? 'text' : 'password';
-      toggle.textContent = isHidden ? 'Hide Password' : 'Show Password';
-    });
+  toggle.addEventListener('click', () => {
+    const isHidden = password.type === 'password';
+    password.type = confirmPassword.type = isHidden ? 'text' : 'password';
+    toggle.textContent = isHidden ? 'Hide Password' : 'Show Password';
+  });
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-      const username = document.getElementById('username').value.trim();
-      const phone = document.getElementById('phone').value.trim();
-      const pwd = password.value.trim();
-      const confirmPwd = confirmPassword.value.trim();
+    const fullname = document.getElementById('fullname').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const username = document.getElementById('username').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const pwd = password.value.trim();
+    const confirmPwd = confirmPassword.value.trim();
 
-      msg.textContent = '';
-      msg.className = 'message';
+    msg.textContent = '';
+    msg.className = 'message';
 
-      if (pwd !== confirmPwd) {
-        msg.textContent = 'Passwords do not match!';
+    if (pwd !== confirmPwd) {
+      msg.textContent = 'Passwords do not match!';
+      msg.classList.add('error');
+      return;
+    }
+
+    try {
+      // Step 1: Check if username exists
+      const checkRes = await fetch(`https://contesto.onrender.com/api/contestants/check-username?username=${username}`);
+      const checkData = await checkRes.json();
+
+      if (checkRes.ok && checkData.exists) {
+        msg.textContent = `Username already exists! Try: ${username}${Math.floor(Math.random() * 1000)}`;
         msg.classList.add('error');
         return;
       }
 
-      try {
-        const res = await fetch('https://contesto.onrender.com/api/contestants/register', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ username, phone, password: pwd }),
-        });
+      // Step 2: Proceed with registration
+      const res = await fetch('https://contesto.onrender.com/api/contestants/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fullname, email, username, phone, password: pwd }),
+      });
 
-        const data = await res.json();
+      const data = await res.json();
 
-        if (res.ok) {
-          window.location.href = 'reward-login.html';
-        } else {
-          msg.textContent = data.message || 'Registration failed.';
-          msg.classList.add('error');
-        }
-      } catch (error) {
-        msg.textContent = 'An error occurred. Please try again.';
+      if (res.ok) {
+        window.location.href = 'reward-login.html';
+      } else {
+        msg.textContent = data.message || 'Registration failed.';
         msg.classList.add('error');
-        console.error(error);
       }
-    });
-  </script>
+    } catch (error) {
+      msg.textContent = 'An error occurred. Please try again.';
+      msg.classList.add('error');
+      console.error(error);
+    }
+  });
+</script>
 </body>
-</html>
+  </html>
