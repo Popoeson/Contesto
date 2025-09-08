@@ -17,20 +17,20 @@
 }
 
 .form-box {
-  width: 80%;               /* 80% width */
-  height: 80%;              /* 80% height */
-  max-width: 900px;         /* keep it neat on big screens */
-  max-height: 700px;        /* optional, prevents it from being too tall */
+  width: 90%;          
+  height: 90%;         
+  max-width: none;     
+  max-height: none;    
   background: rgba(255, 255, 255, 0.05);
-  padding: 40px;
+  padding: 30px;
   border-radius: 12px;
   box-shadow: 0 0 15px rgba(0, 0, 0, 0.4);
   text-align: center;
-  display: flex;
-  flex-direction: column;   /* so inputs stack */
-  justify-content: center;  /* vertically center inside */
-}
 
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  }
     .logo-section {
       margin-bottom: 20px;
     }
@@ -52,9 +52,15 @@
       color: #ff4757;
     }
 
-    .input-group {
-      margin-bottom: 15px;
-      text-align: left;
+    .input-group input {
+  width: 100%;
+  padding: 14px;       
+  font-size: 16px;   
+  border-radius: 8px;
+  border: none;
+  outline: none;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
     }
 
     .input-group label {
@@ -85,11 +91,11 @@
     button {
       margin-top: 10px;
       width: 100%;
-      padding: 12px;
+      padding: 14px;
       background-color: #00aaff;
       border: none;
       color: white;
-      font-size: 16px;
+      font-size: 18px;
       border-radius: 10px;
       cursor: pointer;
       transition: background 0.3s ease;
