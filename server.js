@@ -48,15 +48,20 @@ mongoose
   .then(() => console.log('✅ MongoDB Connected'))
   .catch(err => console.error('❌ MongoDB Connection Error:', err));
 
+
 // ==========================
-// 👤 Contestant Schema
+// 👤 User Schema
 // ==========================
-const contestantSchema = new mongoose.Schema({
-  username: { type: String, required: true },
+const userSchema = new mongoose.Schema({
+  fullName: { type: String, required: true },
+  username: { type: String, required: true, unique: true },
+  email: { type: String, required: true, unique: true },
   phone: { type: String, required: true },
-  password: { type: String, required: true },
+  password: { type: String, required: true }, 
   createdAt: { type: Date, default: Date.now }
 });
+
+
 
 
 
@@ -104,7 +109,7 @@ const captionSchema = new mongoose.Schema(
 // module.exports = mongoose.model("Caption", captionSchema);
 
 // Models
-const Contestant = mongoose.model('Contestant', contestantSchema);
+const User = mongoose.model('User', userSchema);
 const Meme = mongoose.model('Meme', memeSchema);
 const Caption = mongoose.model("Caption", captionSchema);
 
@@ -163,25 +168,49 @@ module.exports = {
  });
 
 // ==========================
-// 📝 Contestant Auth Routes
+// 📝 User Auth Routes
 // ==========================
 
 // Register
-app.post('/api/contestants/register', async (req, res) => {
+app.post('/api/users/register', async (req, res) => {
   try {
-    const { username, phone, password } = req.body;
+    const { fullName, username, email, phone, password } = req.body;
 
-    if (!username || !phone || !password) {
+    if (!fullName || !username || !email || !phone || !password) {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
-    const existingUser = await Contestant.findOne({ username });
+    // Check if username already exists
+    const existingUser = await User.findOne({ username });
     if (existingUser) {
-      return res.status(409).json({ message: 'Username already taken' });
+      // Generate 3 suggestions
+      const suggestions = [];
+      for (let i = 0; i < 3; i++) {
+        const randomNum = Math.floor(Math.random() * 1000); // 0–999
+        suggestions.push(username + randomNum);
+      }
+
+      return res.status(409).json({
+        message: 'Username already taken',
+        suggestions
+      });
     }
 
-    const newContestant = new Contestant({ username, phone, password });
-    await newContestant.save();
+    // Check if email already exists
+    const existingEmail = await User.findOne({ email });
+    if (existingEmail) {
+      return res.status(409).json({ message: 'Email already registered' });
+    }
+
+    const newUser = new User({
+      fullName,
+      username,
+      email,
+      phone,
+      password // ⚠️ no hashing yet
+    });
+
+    await newUser.save();
 
     res.status(201).json({ message: 'Registration successful' });
   } catch (err) {
@@ -189,6 +218,7 @@ app.post('/api/contestants/register', async (req, res) => {
     res.status(500).json({ message: 'Registration failed' });
   }
 });
+
 
 
 // Get all contestants
