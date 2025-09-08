@@ -58,20 +58,22 @@ mongoose
   .then(() => console.log('✅ MongoDB Connected'))
   .catch(err => console.error('❌ MongoDB Connection Error:', err));
 
-
+//==========================
+// 👤 User Schema
+//==========================
 const userSchema = new mongoose.Schema({
   fullName: { type: String, required: true },
   username: { type: String, required: true, unique: true },
-  email: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
   phone: { type: String, required: true },
   password: { type: String, required: true },
-  status: { type: String, enum: ['active', 'inactive'], default: 'active' }, // 👈 NEW
+  profilePicture: { type: String },
+  about: { type: String },
+  location: { type: String },
+  interests: [{ type: String }],
+  status: { type: String, enum: ['incomplete', 'active', 'inactive'], default: 'incomplete' },
   createdAt: { type: Date, default: Date.now }
 });
-
-
-
-
 
 // ==========================
 // 🖼️ Meme Schema
@@ -188,26 +190,10 @@ app.post('/api/users/register', async (req, res) => {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
-    // Check if username already exists
-    const existingUser = await User.findOne({ username });
+    // Check if username/email already exists
+    const existingUser = await User.findOne({ $or: [{ username }, { email }] });
     if (existingUser) {
-      // Generate 3 suggestions
-      const suggestions = [];
-      for (let i = 0; i < 3; i++) {
-        const randomNum = Math.floor(Math.random() * 1000); // 0–999
-        suggestions.push(username + randomNum);
-      }
-
-      return res.status(409).json({
-        message: 'Username already taken',
-        suggestions
-      });
-    }
-
-    // Check if email already exists
-    const existingEmail = await User.findOne({ email });
-    if (existingEmail) {
-      return res.status(409).json({ message: 'Email already registered' });
+      return res.status(409).json({ message: 'Username or Email already taken' });
     }
 
     const newUser = new User({
@@ -215,18 +201,49 @@ app.post('/api/users/register', async (req, res) => {
       username,
       email,
       phone,
-      password // ⚠️ no hashing yet
+      password, // ⚠️ no hashing yet
+      status: 'incomplete'   // <-- Important
     });
 
     await newUser.save();
 
-    res.status(201).json({ message: 'Registration successful' });
+    res.status(201).json({
+      message: 'Step 1 complete, proceed to profile setup',
+      userId: newUser._id   // <-- return ID so frontend can continue
+    });
+
   } catch (err) {
     console.error('Registration Error:', err);
     res.status(500).json({ message: 'Registration failed' });
   }
 });
 
+//============================
+// ✅ Complete Registration 
+//============================
+app.post('/api/users/complete-profile/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { profilePicture, about, location, interests } = req.body;
+
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Update fields
+    user.profilePicture = profilePicture;
+    user.about = about;
+    user.location = location;
+    user.interests = interests ? interests.split(',').map(i => i.trim()) : [];
+    user.status = 'active';
+
+    await user.save();
+
+    res.status(200).json({ message: 'Profile setup complete' });
+  } catch (err) {
+    console.error('Profile Setup Error:', err);
+    res.status(500).json({ message: 'Could not complete profile' });
+  }
+});
 
 // ==========================
 // 🔑 User Login
