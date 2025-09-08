@@ -8,8 +8,18 @@ require('dotenv').config();
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('cloudinary').v2;
 
+
+
 const app = express();
 
+// ✅ Allow Vercel frontend
+app.use(cors({
+  origin: "https://contesto-tau.vercel.app", // your frontend domain
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
+app.use(express.json());
 // ==========================
 // 🌥️ Cloudinary Configuration
 // ==========================
