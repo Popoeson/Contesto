@@ -5,26 +5,31 @@
   <title>Register- Contesto</title>
   <style>
     body {
-      margin: 0;
-      padding: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(to bottom right, #003366, #005f99);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      color: #ffffff;
-    }
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(to bottom right, #003366, #005f99);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  color: #ffffff;
+}
 
-    .form-box {
-      width: 100%;
-      max-width: 100%;
-      background: rgba(255, 255, 255, 0.05);
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 0 15px rgba(0, 0, 0, 0.4);
-      text-align: center;
-    }
+.form-box {
+  width: 80%;               /* 80% width */
+  height: 80%;              /* 80% height */
+  max-width: 900px;         /* keep it neat on big screens */
+  max-height: 700px;        /* optional, prevents it from being too tall */
+  background: rgba(255, 255, 255, 0.05);
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.4);
+  text-align: center;
+  display: flex;
+  flex-direction: column;   /* so inputs stack */
+  justify-content: center;  /* vertically center inside */
+}
 
     .logo-section {
       margin-bottom: 20px;
