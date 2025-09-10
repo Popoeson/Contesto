@@ -128,42 +128,41 @@
     });
 
     document.getElementById("saveProfile").addEventListener("click", async () => {
-      const location = document.getElementById("location").value.trim();
-      if (!location) {
-        alert("Location is required!");
-        return;
-      }
+  const userId = localStorage.getItem("userId"); // saved from register step
+  const location = document.getElementById("location").value.trim();
 
-      const formData = new FormData();
-      formData.append("location", location);
-      formData.append("about", document.getElementById("about").value);
-      formData.append("interests", document.getElementById("interests").value);
-      formData.append("instagram", document.getElementById("instagram").value);
-      formData.append("twitter", document.getElementById("twitter").value);
-      formData.append("linkedin", document.getElementById("linkedin").value);
+  if (!location) {
+    alert("Location is required!");
+    return;
+  }
 
-      if (profilePicInput.files[0]) {
-        formData.append("profilePic", profilePicInput.files[0]); // to Cloudinary
-      }
+  const formData = new FormData();
+  formData.append("profilePicture", document.getElementById("profilePicInput").files[0]); 
+  formData.append("about", document.getElementById("about").value);
+  formData.append("location", location);
+  formData.append("interests", document.getElementById("interests").value);
+  formData.append("instagram", document.getElementById("instagram").value);
+  formData.append("twitter", document.getElementById("twitter").value);
+  formData.append("linkedin", document.getElementById("linkedin").value);
 
-      try {
-        const response = await fetch("https://contesto.onrender.com/api/users/complete-profile/:id", {
-          method: "POST",
-          body: formData
-        });
-
-        const result = await response.json();
-        if (response.ok) {
-          alert("Profile saved successfully!");
-          window.location.href = "dashboard.html"; // redirect after setup
-        } else {
-          alert("Error: " + result.message);
-        }
-      } catch (err) {
-        console.error(err);
-        alert("Something went wrong.");
-      }
+  try {
+    const response = await fetch(`https://contesto.onrender.com/api/users/complete-profile/${userId}`, {
+      method: "POST",
+      body: formData
     });
+
+    const result = await response.json();
+    if (response.ok) {
+      alert("Profile saved successfully!");
+      window.location.href = "dashboard.html";
+    } else {
+      alert("Error: " + result.message);
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Something went wrong.");
+  }
+});
   </script>
 </body>
 </html>
