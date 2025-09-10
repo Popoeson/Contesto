@@ -162,12 +162,24 @@
   </footer>
 
   <script>
-    // ✅ Replace with actual user data from backend/localStorage
-    const userFullName = localStorage.getItem("fullName") || "User";
-    const profilePicture = localStorage.getItem("profilePic") || "https://via.placeholder.com/55";
+  // ✅ Get user object from localStorage
+  const storedUser = localStorage.getItem("user");
 
-    document.getElementById("welcomeText").textContent = `Welcome, ${userFullName}`;
-    document.getElementById("profilePic").src = profilePicture;
+  if (storedUser) {
+    const user = JSON.parse(storedUser);
+
+    // Full name fallback: username if fullName not set
+    const fullName = user.fullName || user.username || "User";
+
+    // Profile picture fallback
+    const profilePic = user.profilePic || "https://via.placeholder.com/55";
+
+    document.getElementById("welcomeText").textContent = `Welcome, ${fullName}`;
+    document.getElementById("profilePic").src = profilePic;
+  } else {
+    // If no user in localStorage → redirect back to login
+    window.location.href = "login.html";
+  }
   </script>
 </body>
 </html>
