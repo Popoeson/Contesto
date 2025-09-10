@@ -71,6 +71,7 @@ const userSchema = new mongoose.Schema({
   about: { type: String },
   location: { type: String },
   interests: [{ type: String }],
+  social: { type: [String]},
   status: { type: String, enum: ['incomplete', 'active', 'inactive'], default: 'incomplete' },
   createdAt: { type: Date, default: Date.now }
 });
@@ -252,7 +253,7 @@ app.get('/api/users/check-username', async (req, res) => {
 app.post('/api/users/complete-profile/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { profilePicture, about, location, interests } = req.body;
+    const { profilePicture, about, location, interests, social } = req.body;
 
     const user = await User.findById(id);
     if (!user) return res.status(404).json({ message: 'User not found' });
@@ -262,6 +263,7 @@ app.post('/api/users/complete-profile/:id', async (req, res) => {
     user.about = about;
     user.location = location;
     user.interests = interests ? interests.split(',').map(i => i.trim()) : [];
+    user.social = social;
     user.status = 'active';
 
     await user.save();
