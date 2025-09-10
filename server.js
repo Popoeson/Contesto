@@ -250,25 +250,33 @@ app.get('/api/users/check-username', async (req, res) => {
 //============================
 // ✅ Complete Registration 
 //============================
-app.post('/api/users/complete-profile/:id', async (req, res) => {
+app.post('/api/users/complete-profile/:id', upload.single("profilePic"), async (req, res) => {
   try {
     const { id } = req.params;
-    const { profilePicture, about, location, interests, social } = req.body;
+    const { about, location, interests, social } = req.body;
 
     const user = await User.findById(id);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    // Update fields
-    user.profilePicture = profilePicture;
-    user.about = about;
-    user.location = location;
-    user.interests = interests ? interests.split(',').map(i => i.trim()) : [];
-    user.social = social;
+    // 🔹 Profile picture
+    if (req.file && req.file.path) {
+      user.profilePicture = req.file.path; // ✅ Cloudinary uploaded file
+    } else if (!user.profilePicture) {
+      // ✅ Set dummy default only if not already set
+      user.profilePicture = "https://via.placeholder.com/150?text=Profile";
+    }
+
+    // 🔹 Other fields
+    if (about) user.about = about;
+    if (location) user.location = location;
+    if (interests) user.interests = interests.split(',').map(i => i.trim());
+    if (social) user.social = social.split(',').map(s => s.trim());
+
     user.status = 'active';
 
     await user.save();
 
-    res.status(200).json({ message: 'Profile setup complete' });
+    res.status(200).json({ message: 'Profile setup complete', user });
   } catch (err) {
     console.error('Profile Setup Error:', err);
     res.status(500).json({ message: 'Could not complete profile' });
