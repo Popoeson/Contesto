@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contesto - Homepage</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #0d47a1, #42a5f5);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    header {
+      text-align: center;
+      padding: 20px 0;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    header img.logo {
+      height: 60px;
+    }
+
+    .user-card {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 15px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      max-width: 280px;
+      margin: 20px;
+    }
+
+    .user-card img {
+      width: 55px;
+      height: 55px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid white;
+    }
+
+    .user-card span {
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    main {
+      flex: 1;
+      padding: 20px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 25px;
+      border-radius: 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.2s, background 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .card i {
+      font-size: 35px;
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .card h3 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    footer {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 20px;
+      text-align: center;
+    }
+
+    .advert-section h2 {
+      margin-bottom: 15px;
+    }
+
+    .advert-card {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 40px;
+      border-radius: 15px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <!-- HEADER -->
+  <header>
+    <img src="logo.png" alt="Contesto Logo" class="logo">
+  </header>
+
+  <!-- USER CARD -->
+  <div class="user-card">
+    <img id="profilePic" src="https://via.placeholder.com/55" alt="Profile Picture">
+    <span id="welcomeText">Welcome, User</span>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <main>
+    <div class="cards">
+      <a href="profile.html" class="card">
+        <i class="fa-solid fa-user"></i>
+        <h3>Profile</h3>
+      </a>
+      <a href="feeds.html" class="card">
+        <i class="fa-solid fa-rss"></i>
+        <h3>Feeds</h3>
+      </a>
+      <a href="upload.html" class="card">
+        <i class="fa-solid fa-upload"></i>
+        <h3>Upload</h3>
+      </a>
+      <a href="contest.html" class="card">
+        <i class="fa-solid fa-trophy"></i>
+        <h3>Contest</h3>
+      </a>
+      <a href="results.html" class="card">
+        <i class="fa-solid fa-chart-line"></i>
+        <h3>Results</h3>
+      </a>
+      <a href="settings.html" class="card">
+        <i class="fa-solid fa-gear"></i>
+        <h3>Settings</h3>
+      </a>
+      <a href="about.html" class="card">
+        <i class="fa-solid fa-circle-info"></i>
+        <h3>About Us</h3>
+      </a>
+    </div>
+  </main>
+
+  <!-- FOOTER ADVERT -->
+  <footer>
+    <div class="advert-section">
+      <h2>Sponsored Ad</h2>
+      <div class="advert-card">
+        Your advert could be here!
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // ✅ Replace with actual user data from backend/localStorage
+    const userFullName = localStorage.getItem("fullName") || "User";
+    const profilePicture = localStorage.getItem("profilePic") || "https://via.placeholder.com/55";
+
+    document.getElementById("welcomeText").textContent = `Welcome, ${userFullName}`;
+    document.getElementById("profilePic").src = profilePicture;
+  </script>
+</body>
+</html>
