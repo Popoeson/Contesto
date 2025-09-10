@@ -146,12 +146,17 @@
           throw new Error("Failed to save profile");
         }
 
-        const data = await res.json();
-        alert("Profile saved successfully!");
-        console.log(data);
+         const data = await res.json();
+alert("Profile saved successfully!");
+console.log(data);
 
-        // redirect to dashboard
-        window.location.href = "dashboard.html";
+// ✅ Save updated user info in localStorage
+localStorage.setItem("user", JSON.stringify(data.user));
+
+// redirect to homepage
+window.location.href = "homepage.html";
+
+        
       } catch (error) {
         console.error(error);
         alert("Error saving profile");
