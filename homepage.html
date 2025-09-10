@@ -169,7 +169,7 @@
     const user = JSON.parse(storedUser);
 
     // Full name fallback: username if fullName not set
-    const fullName = user.fullName || user.username || "User";
+    const username = user.username || "User";
 
     // Profile picture fallback
     const profilePic = user.profilePic || "https://via.placeholder.com/55";
