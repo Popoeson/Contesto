@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -164,54 +165,61 @@
   </div>
 
   <script>
-    const toggle = document.getElementById('togglePassword');
-    const password = document.getElementById('password');
-    const loginForm = document.getElementById('loginForm');
-    const loginBtn = document.getElementById('loginBtn');
-    const errorMsg = document.getElementById('errorMsg');
-    const formBox = document.getElementById('formBox');
-    const overlay = document.getElementById('overlay');
+  const toggle = document.getElementById('togglePassword');
+  const password = document.getElementById('password');
+  const loginForm = document.getElementById('loginForm');
+  const loginBtn = document.getElementById('loginBtn');
+  const overlay = document.getElementById('overlay'); // ✅ fixed
+  const spinner = document.querySelector('.spinner');
+  const errorMsg = document.getElementById('errorMsg');
+  const formBox = document.getElementById('formBox');
 
-    toggle.addEventListener('click', () => {
-      const isHidden = password.type === 'password';
-      password.type = isHidden ? 'text' : 'password';
-      toggle.textContent = isHidden ? 'Hide Password' : 'Show Password';
-    });
+  toggle.addEventListener('click', () => {
+    const isHidden = password.type === 'password';
+    password.type = isHidden ? 'text' : 'password';
+    toggle.textContent = isHidden ? 'Hide Password' : 'Show Password';
+  });
 
-    loginForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    overlay.style.display = 'flex'; // Show overlay when submitting
+    spinner.style.display = 'flex';
+    formBox.classList.add('blur');
+    errorMsg.textContent = '';
 
-      // Show overlay + blur
-      loginBtn.disabled = true;
-      overlay.style.display = 'flex';
-      formBox.classList.add('blur');
-      errorMsg.textContent = '';
+    const username = document.getElementById('username').value.trim();
+    const passwordVal = password.value.trim();
 
-      const username = document.getElementById('username').value.trim();
-      const passwordVal = password.value.trim();
+    try {
+      const res = await fetch('https://contesto.onrender.com/api/users/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password: passwordVal })
+      });
 
-      try {
-        const res = await fetch('https://contesto.onrender.com/api/users/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password: passwordVal })
-        });
+      const data = await res.json();
 
-        const data = await res.json();
+      if (res.ok) {
+        // ✅ save to localStorage
+        localStorage.setItem('user', JSON.stringify(data.user));
 
-        if (res.ok) {
-          localStorage.setItem('user', JSON.stringify(data.user));
-          window.location.href = 'homepage.html';
-        } else {
-          throw new Error(data.message || 'Login failed');
-        }
-      } catch (err) {
-        errorMsg.textContent = err.message;
-        loginBtn.disabled = false;
+        // ✅ clear spinner/overlay before redirect
         overlay.style.display = 'none';
+        spinner.style.display = 'none';
         formBox.classList.remove('blur');
+
+        window.location.href = 'homepage.html';
+      } else {
+        throw new Error(data.message || 'Login failed');
       }
-    });
+    } catch (err) {
+      errorMsg.textContent = err.message;
+      loginBtn.disabled = false;
+      overlay.style.display = 'none';
+      spinner.style.display = 'none';
+      formBox.classList.remove('blur');
+    }
+  });
   </script>
 </body>
   </html>
