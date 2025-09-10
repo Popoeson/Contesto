@@ -7,7 +7,7 @@
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: linear-gradient(to right, #0d47a1, #42a5f5); /* smooth blue gradient */
+      background: linear-gradient(to right, #0d47a1, #42a5f5);
       color: white;
       padding: 20px;
     }
@@ -24,141 +24,131 @@
       max-width: 80%;
       font-size: 16px;
     }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 20px;
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    .card {
       background: rgba(255, 255, 255, 0.1);
-    }
-    th, td {
-      padding: 10px;
-      text-align: left;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-    }
-    th {
-      background-color: rgba(255, 255, 255, 0.1);
-    }
-    .pagination {
+      padding: 15px;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       text-align: center;
     }
-    .pagination button {
-      padding: 8px 12px;
-      margin: 0 5px;
-      font-size: 14px;
-      cursor: pointer;
-      border: none;
-      background: #ffffff33;
-      color: white;
+    .card img {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: 10px;
     }
-    .pagination button.active {
-      font-weight: bold;
-      background: #ffffff55;
+    .card .status {
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 14px;
+      margin: 8px 0;
+    }
+    .status.active {
+      background: green;
+    }
+    .status.inactive {
+      background: red;
+    }
+    .actions button {
+      margin: 5px;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
     }
     .delete-btn {
       background: red;
       color: white;
-      border: none;
-      padding: 6px 10px;
-      cursor: pointer;
+    }
+    .activate-btn {
+      background: green;
+      color: white;
+    }
+    .deactivate-btn {
+      background: orange;
+      color: white;
     }
   </style>
 </head>
 <body>
-  <h1>Contesto Contestants</h1>
+  <h1>Contesto Members</h1>
 
   <div class="search-container">
-    <input type="text" id="searchInput" placeholder="Search by username or phone..." onkeyup="renderTable()">
+    <input type="text" id="searchInput" placeholder="Search by email or phone..." onkeyup="renderCards()">
   </div>
 
-  <table id="contestantTable">
-    <thead>
-      <tr>
-        <th>Username</th>
-        <th>Phone</th>
-        <th>Date Registered</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
-  <div class="pagination" id="pagination"></div>
+  <div class="cards" id="userCards"></div>
 
   <script>
-    const API_URL = "https://contesto.onrender.com/api/contestants"; // Adjust to actual endpoint if needed
-    let contestants = [];
-    const itemsPerPage = 12;
-    let currentPage = 1;
+    const API_URL = "https://contesto.onrender.com/api/users";
+    let users = [];
 
-    async function fetchContestants() {
+    async function fetchUsers() {
       try {
         const res = await fetch(API_URL);
-        const data = await res.json();
-        contestants = data.reverse(); // newest first
-        renderTable();
-        renderPagination();
+        users = await res.json();
+        renderCards();
       } catch (err) {
-        console.error("Failed to fetch contestants:", err);
+        console.error("Failed to fetch users:", err);
       }
     }
 
-    function renderTable() {
-      const tbody = document.querySelector("#contestantTable tbody");
+    function renderCards() {
+      const container = document.getElementById("userCards");
       const searchQuery = document.getElementById("searchInput").value.toLowerCase();
 
-      const filtered = contestants.filter(c =>
-        c.username.toLowerCase().includes(searchQuery) ||
-        c.phone.toLowerCase().includes(searchQuery)
+      const filtered = users.filter(u =>
+        (u.email && u.email.toLowerCase().includes(searchQuery)) ||
+        (u.phone && u.phone.toLowerCase().includes(searchQuery))
       );
 
-      const start = (currentPage - 1) * itemsPerPage;
-      const paginated = filtered.slice(start, start + itemsPerPage);
-
-      tbody.innerHTML = paginated.map(c => `
-        <tr>
-          <td>${c.username}</td>
-          <td>${c.phone}</td>
-          <td>${new Date(c.createdAt || c.date).toLocaleDateString()}</td>
-          <td><button class="delete-btn" onclick="confirmDelete('${c._id}')">Delete</button></td>
-        </tr>
+      container.innerHTML = filtered.map(u => `
+        <div class="card">
+          <img src="${u.profilePicture}" alt="Profile">
+          <h3>${u.serial}. ${u.email}</h3>
+          <p><b>Phone:</b> ${u.phone}</p>
+          <p><b>Location:</b> ${u.location}</p>
+          <p><b>About:</b> ${u.about}</p>
+          <p><b>Interest:</b> ${u.interest}</p>
+          <p><b>Socials:</b> ${u.socials.length ? u.socials.join(", ") : "N/A"}</p>
+          <div class="status ${u.status}">${u.status.toUpperCase()}</div>
+          <div class="actions">
+            <button class="delete-btn" onclick="deleteUser('${u.id}')">Delete</button>
+            <button class="activate-btn" onclick="activateUser('${u.id}')">Activate</button>
+            <button class="deactivate-btn" onclick="deactivateUser('${u.id}')">Deactivate</button>
+          </div>
+        </div>
       `).join('');
     }
 
-    function renderPagination() {
-      const pagination = document.getElementById("pagination");
-      const searchQuery = document.getElementById("searchInput").value.toLowerCase();
-      const filtered = contestants.filter(c =>
-        c.username.toLowerCase().includes(searchQuery) ||
-        c.phone.toLowerCase().includes(searchQuery)
-      );
-      const totalPages = Math.ceil(filtered.length / itemsPerPage);
-
-      pagination.innerHTML = '';
-      for (let i = 1; i <= totalPages; i++) {
-        pagination.innerHTML += `<button class="${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
-      }
+    async function deleteUser(id) {
+      if (!confirm("Delete this user?")) return;
+      await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+      users = users.filter(u => u.id !== id);
+      renderCards();
     }
 
-    function goToPage(page) {
-      currentPage = page;
-      renderTable();
-      renderPagination();
+    async function activateUser(id) {
+      await fetch(`${API_URL}/${id}/activate`, { method: "PATCH" });
+      users = users.map(u => u.id === id ? { ...u, status: "active" } : u);
+      renderCards();
     }
 
-    async function confirmDelete(id) {
-      if (confirm("Are you sure you want to delete this contestant?")) {
-        try {
-          await fetch(`${API_URL}/${id}`, { method: "DELETE" });
-          contestants = contestants.filter(c => c._id !== id);
-          renderTable();
-          renderPagination();
-        } catch (err) {
-          alert("Error deleting contestant.");
-        }
-      }
+    async function deactivateUser(id) {
+      await fetch(`${API_URL}/${id}/deactivate`, { method: "PATCH" });
+      users = users.map(u => u.id === id ? { ...u, status: "inactive" } : u);
+      renderCards();
     }
 
-    fetchContestants();
+    fetchUsers();
   </script>
 </body>
 </html>
