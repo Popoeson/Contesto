@@ -15,7 +15,7 @@ const app = express();
 // ✅ Allow Vercel frontend
 app.use(cors({
   origin: "https://contesto-tau.vercel.app", // your frontend domain
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
