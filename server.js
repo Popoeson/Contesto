@@ -218,6 +218,34 @@ app.post('/api/users/register', async (req, res) => {
   }
 });
 
+// ✅ Check if username exists
+app.get('/api/users/check-username', async (req, res) => {
+  try {
+    const { username } = req.query;
+    if (!username) {
+      return res.status(400).json({ exists: false, message: "No username provided" });
+    }
+
+    const user = await User.findOne({ username });
+    res.json({ exists: !!user });
+  } catch (err) {
+    console.error("Check Username Error:", err);
+    res.status(500).json({ exists: false, message: "Server error" });
+  }
+});
+
+// 🚨 Important: put this AFTER check-username
+// app.get('/api/users/:id', async (req, res) => {
+ // try {
+//    const user = await User.findById(req.params.id);
+//    if (!user) return res.status(404).json({ message: "User not found" });
+//    res.json(user);
+//  } catch (err) {
+//    console.error("Get User Error:", err);
+//    res.status(500).json({ message: "Error retrieving user" });
+//  }
+// });
+
 //============================
 // ✅ Complete Registration 
 //============================
