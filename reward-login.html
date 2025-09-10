@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Login - Caption Contest</title>
+  <title>Login - Contesto</title>
   <style>
     body {
       margin: 0;
@@ -24,6 +24,12 @@
       border-radius: 12px;
       box-shadow: 0 0 15px rgba(0, 0, 0, 0.4);
       text-align: center;
+      position: relative;
+      transition: filter 0.3s ease;
+    }
+
+    .form-box.blur {
+      filter: blur(2px);
     }
 
     .logo-section {
@@ -96,17 +102,16 @@
     }
 
     .spinner {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
+      display: none;
+      margin: 15px auto 0;
       display: flex;
-      gap: 4px;
+      justify-content: center;
+      gap: 6px;
     }
 
     .spinner div {
-      width: 6px;
-      height: 6px;
+      width: 8px;
+      height: 8px;
       background: white;
       border-radius: 50%;
       animation: bounce 0.6s infinite ease-in-out;
@@ -137,7 +142,7 @@
   </style>
 </head>
 <body>
-  <div class="form-box">
+  <div class="form-box" id="formBox">
     <div class="logo-section">
       <img src="uploads/logo.png" alt="Site Logo" class="logo">
       <h2 class="slogan">Where Humor Meets Rewards</h2>
@@ -153,12 +158,10 @@
         <input type="password" id="password" required>
         <small id="togglePassword">Show Password</small>
       </div>
-      <button type="submit" id="loginBtn">
-        <span id="btnText">Login</span>
-        <div id="spinner" class="spinner" style="display: none;">
-          <div></div><div></div><div></div>
-        </div>
-      </button>
+      <button type="submit" id="loginBtn">Login</button>
+      <div class="spinner" id="spinner">
+        <div></div><div></div><div></div>
+      </div>
       <div id="errorMsg" class="error"></div>
     </form>
   </div>
@@ -168,9 +171,9 @@
     const password = document.getElementById('password');
     const loginForm = document.getElementById('loginForm');
     const loginBtn = document.getElementById('loginBtn');
-    const btnText = document.getElementById('btnText');
     const spinner = document.getElementById('spinner');
     const errorMsg = document.getElementById('errorMsg');
+    const formBox = document.getElementById('formBox');
 
     toggle.addEventListener('click', () => {
       const isHidden = password.type === 'password';
@@ -181,17 +184,17 @@
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      // Show spinner
+      // Show spinner + blur
       loginBtn.disabled = true;
-      btnText.style.display = 'none';
       spinner.style.display = 'flex';
+      formBox.classList.add('blur');
       errorMsg.textContent = '';
 
       const username = document.getElementById('username').value.trim();
       const passwordVal = password.value.trim();
 
       try {
-        const res = await fetch('https://contesto.onrender.com/api/contestants/login', {
+        const res = await fetch('https://contesto.onrender.com/api/users/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username, password: passwordVal })
@@ -200,16 +203,17 @@
         const data = await res.json();
 
         if (res.ok) {
-          localStorage.setItem('contestantUsername', data.contestant.username);
-          window.location.href = 'contestants-home.html';
+          // ✅ save to localStorage (same way registration does)
+          localStorage.setItem('user', JSON.stringify(data.user));
+          window.location.href = 'home.html';
         } else {
           throw new Error(data.message || 'Login failed');
         }
       } catch (err) {
         errorMsg.textContent = err.message;
         loginBtn.disabled = false;
-        btnText.style.display = 'inline';
         spinner.style.display = 'none';
+        formBox.classList.remove('blur');
       }
     });
   </script>
