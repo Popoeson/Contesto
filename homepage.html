@@ -108,7 +108,7 @@
 <body>
   <!-- HEADER -->
   <header>
-    <img src="logo.png" alt="Contesto Logo" class="logo">
+    <img src="uploads/logo.png" alt="Contesto Logo" class="logo">
   </header>
 
   <!-- USER CARD -->
@@ -174,7 +174,7 @@
     // Profile picture fallback
     const profilePic = user.profilePic || "https://via.placeholder.com/55";
 
-    document.getElementById("welcomeText").textContent = `Welcome, ${fullName}`;
+    document.getElementById("welcomeText").textContent = `Welcome, ${username}`;
     document.getElementById("profilePic").src = profilePic;
   } else {
     // If no user in localStorage → redirect back to login
