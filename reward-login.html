@@ -181,17 +181,10 @@
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       overlay.style.display = 'flex'; // Show overlay when submitting
+      spinner.style.display = 'flex';
+      formBox.classList.add('blur');
       errorMsg.textContent = '';
     
-
-   // loginForm.addEventListener('submit', async (e) => {
-      // e.preventDefault();
-
-      // Show spinner + blur
-      // loginBtn.disabled = true;
-  //   spinner.style.display = 'flex';
-  //    formBox.classList.add('blur');
-      
       const username = document.getElementById('username').value.trim();
       const passwordVal = password.value.trim();
 
