@@ -101,7 +101,7 @@
       background-color: #008ecc;
     }
 
-       /* Loader Overlay */
+    /* Loader Overlay */
     .overlay {
       position: fixed;
       top: 0; left: 0;
@@ -127,7 +127,8 @@
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
-      }
+    }
+
     .error {
       margin-top: 12px;
       font-size: 14px;
@@ -153,14 +154,13 @@
         <small id="togglePassword">Show Password</small>
       </div>
       <button type="submit" id="loginBtn">Login</button>
-      <!-- Loader Overlay -->
-  <div class="overlay" id="overlay">
-    <div class="spinner"></div>
-  </div>
-        <div></div><div></div><div></div>
-      </div>
       <div id="errorMsg" class="error"></div>
     </form>
+  </div>
+
+  <!-- Loader Overlay -->
+  <div class="overlay" id="overlay">
+    <div class="spinner"></div>
   </div>
 
   <script>
@@ -168,9 +168,9 @@
     const password = document.getElementById('password');
     const loginForm = document.getElementById('loginForm');
     const loginBtn = document.getElementById('loginBtn');
-    const spinner = document.getElementById('spinner');
     const errorMsg = document.getElementById('errorMsg');
     const formBox = document.getElementById('formBox');
+    const overlay = document.getElementById('overlay');
 
     toggle.addEventListener('click', () => {
       const isHidden = password.type === 'password';
@@ -178,13 +178,15 @@
       toggle.textContent = isHidden ? 'Hide Password' : 'Show Password';
     });
 
-    form.addEventListener('submit', async (e) => {
+    loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      overlay.style.display = 'flex'; // Show overlay when submitting
-      spinner.style.display = 'flex';
+
+      // Show overlay + blur
+      loginBtn.disabled = true;
+      overlay.style.display = 'flex';
       formBox.classList.add('blur');
       errorMsg.textContent = '';
-    
+
       const username = document.getElementById('username').value.trim();
       const passwordVal = password.value.trim();
 
@@ -198,7 +200,6 @@
         const data = await res.json();
 
         if (res.ok) {
-          // ✅ save to localStorage (same way registration does)
           localStorage.setItem('user', JSON.stringify(data.user));
           window.location.href = 'homepage.html';
         } else {
@@ -207,10 +208,10 @@
       } catch (err) {
         errorMsg.textContent = err.message;
         loginBtn.disabled = false;
-        spinner.style.display = 'none';
+        overlay.style.display = 'none';
         formBox.classList.remove('blur');
       }
     });
   </script>
 </body>
-</html>
+  </html>
