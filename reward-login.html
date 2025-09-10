@@ -178,15 +178,20 @@
       toggle.textContent = isHidden ? 'Hide Password' : 'Show Password';
     });
 
-    loginForm.addEventListener('submit', async (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
+      overlay.style.display = 'flex'; // Show overlay when submitting
+      errorMsg.textContent = '';
+    
+
+   // loginForm.addEventListener('submit', async (e) => {
+      // e.preventDefault();
 
       // Show spinner + blur
-      loginBtn.disabled = true;
-      spinner.style.display = 'flex';
-      formBox.classList.add('blur');
-      errorMsg.textContent = '';
-
+      // loginBtn.disabled = true;
+  //   spinner.style.display = 'flex';
+  //    formBox.classList.add('blur');
+      
       const username = document.getElementById('username').value.trim();
       const passwordVal = password.value.trim();
 
@@ -202,7 +207,7 @@
         if (res.ok) {
           // ✅ save to localStorage (same way registration does)
           localStorage.setItem('user', JSON.stringify(data.user));
-          window.location.href = 'home.html';
+          window.location.href = 'homepage.html';
         } else {
           throw new Error(data.message || 'Login failed');
         }
