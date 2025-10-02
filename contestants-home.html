@@ -217,13 +217,13 @@
     document.getElementById("profilePic").src = profilePic;
     document.getElementById("welcomeNote").textContent = `Welcome, ${user.fullName || user.username || "Contestant"}`;
   } else {
-    window.location.href = "login.html";
+    window.location.href = "reward-login.html";
   }
 
   // Logout
   function logout() {
     localStorage.removeItem("user");
-    window.location.href = "login.html";
+    window.location.href = "reward-login.html";
   }
 
   // Delete Account
