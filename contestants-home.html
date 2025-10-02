@@ -12,24 +12,15 @@
       min-height: 100vh;
       color: white;
       overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
     }
 
-    .logo-section {
-      text-align: center;
-    }
-
-    .logo {
-      width: 30px;
-      height: 30px;
-      border-radius: 20px;
-    }
-    
-
-    /* Sidebar (hidden by default) */
+    /* Sidebar */
     .sidebar {
       position: fixed;
       top: 0;
-      left: -300px; /* completely off-screen by default */
+      left: -300px;
       width: 250px;
       height: 100%;
       background: rgba(0, 0, 0, 0.9);
@@ -42,9 +33,7 @@
       z-index: 1000;
     }
 
-    .sidebar.active {
-      left: 0; /* slides in when active */
-    }
+    .sidebar.active { left: 0; }
 
     .sidebar button {
       background: #ff4444;
@@ -54,21 +43,14 @@
       margin: 10px 0;
       border-radius: 8px;
       cursor: pointer;
-      transition: background 0.3s ease;
       font-size: 16px;
-    }
-
-    .sidebar button:hover {
-      background: #cc0000;
     }
 
     .sidebar button.settings {
       background: #ffaa00;
     }
 
-    .sidebar button.settings:hover {
-      background: #cc8800;
-    }
+    .sidebar button:hover { opacity: 0.85; }
 
     /* Overlay */
     .overlay {
@@ -81,17 +63,20 @@
       display: none;
       z-index: 900;
     }
+    .overlay.active { display: block; }
 
-    .overlay.active {
-      display: block;
-    }
-
-    /* Top bar */
+    /* Top bar fixed */
     .top-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 15px 20px;
+      background: rgba(0,0,0,0.3);
+      z-index: 800;
     }
 
     .menu-btn {
@@ -102,9 +87,16 @@
       color: white;
     }
 
-    /* Main Content */
+    .logo {
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+    }
+
+    /* Main */
     .main {
-      padding: 20px;
+      flex: 1;
+      padding: 100px 20px 30px; /* add top padding because header is fixed */
     }
 
     .header {
@@ -128,24 +120,14 @@
       color: #fff000;
     }
 
-    /* Cards grid */
+    /* Cards */
     .cards {
       display: grid;
-      grid-template-columns: repeat(2, 1fr); /* 2 per row by default */
+      grid-template-columns: repeat(2, 1fr);
       gap: 20px;
     }
-
-    @media (min-width: 768px) {
-      .cards {
-        grid-template-columns: repeat(3, 1fr); /* 3 per row on tablets */
-      }
-    }
-
-    @media (min-width: 1024px) {
-      .cards {
-        grid-template-columns: repeat(4, 1fr); /* 4 per row on desktop */
-      }
-    }
+    @media (min-width: 768px) { .cards { grid-template-columns: repeat(3, 1fr); } }
+    @media (min-width: 1024px) { .cards { grid-template-columns: repeat(4, 1fr); } }
 
     .card {
       background: rgba(255, 255, 255, 0.1);
@@ -157,11 +139,7 @@
       cursor: pointer;
       transition: transform 0.2s ease, background 0.3s ease;
     }
-
-    .card:hover {
-      transform: translateY(-5px);
-      background: rgba(255, 255, 255, 0.2);
-    }
+    .card:hover { transform: translateY(-5px); background: rgba(255, 255, 255, 0.2); }
 
     footer {
       text-align: center;
@@ -186,22 +164,16 @@
   <!-- Top bar -->
   <div class="top-bar">
     <button class="menu-btn" onclick="toggleSidebar()">☰</button>
-    <div class="logo-section">
-      <img src="uploads/logo.png" alt="Site Logo" class="logo">
-    </div>
-    
-    <h2></h>
+    <img src="uploads/logo.png" alt="Site Logo" class="logo">
   </div>
 
-  <!-- Main Section -->
+  <!-- Main -->
   <div class="main">
-    <!-- Profile + Welcome -->
     <div class="header">
       <img id="profilePic" src="images/default-avatar.png" alt="Profile Picture">
       <h2 id="welcomeNote">Welcome, Contestant</h2>
     </div>
 
-    <!-- Cards -->
     <div class="cards">
       <div class="card">Contests</div>
       <div class="card">Winnings History</div>
@@ -215,7 +187,6 @@
   </div>
 
 <script>
-  // Sidebar toggle
   function toggleSidebar() {
     document.getElementById("sidebar").classList.toggle("active");
     document.getElementById("overlay").classList.toggle("active");
@@ -225,25 +196,25 @@
   const user = JSON.parse(localStorage.getItem("user"));
 
   if (user) {
-    const profilePic = user.profilePic 
-      ? `https://contesto.onrender.com${user.profilePic}`
+    let profilePath = user.profilePicture || user.profilePic || "";
+    let profilePic = profilePath
+      ? (profilePath.startsWith("http") ? profilePath : `https://contesto.onrender.com${profilePath}`)
       : "images/default-avatar.png";
 
     document.getElementById("profilePic").src = profilePic;
-    document.getElementById("welcomeNote").textContent = `Welcome, ${user.fullName || user.username || "Contestant"}`;
+    document.getElementById("welcomeNote").textContent =
+      `Welcome, ${user.fullName || user.username || "Contestant"}`;
   } else {
     window.location.href = "reward-login.html";
   }
 
-  // Logout
   function logout() {
     localStorage.removeItem("user");
     window.location.href = "reward-login.html";
   }
 
-  // Delete Account
   function deleteAccount() {
-    if (confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
+    if (confirm("Are you sure you want to delete your account?")) {
       localStorage.removeItem("user");
       alert("Your account has been deleted.");
       window.location.href = "register.html";
@@ -252,4 +223,4 @@
 </script>
 
 </body>
-        </html>
+  </html>
