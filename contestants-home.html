@@ -11,168 +11,218 @@
       background: linear-gradient(to bottom right, #0044cc, #00c2ff);
       min-height: 100vh;
       color: white;
+      overflow-x: hidden;
     }
 
-    header {
+    /* Sidebar (hidden by default) */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: -250px;
+      width: 250px;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(6px);
       padding: 20px;
-      text-align: center;
-      background-color: rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(8px);
+      box-shadow: 2px 0 8px rgba(0,0,0,0.4);
+      transition: left 0.3s ease-in-out;
+      display: flex;
+      flex-direction: column;
+      z-index: 1000;
     }
 
-    header h1 {
-      margin: 0;
-      font-size: 28px;
-      color: #fff000; /* custard yellow */
+    .sidebar.active {
+      left: 0;
     }
 
-    .notification-icon {
-      float: right;
-      margin-right: 20px;
-      font-size: 20px;
-      cursor: pointer;
-      color: white;
-    }
-
-    .container {
-      max-width: 800px;
-      margin: 40px auto;
-      padding: 30px;
-      background-color: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(10px);
-      border-radius: 16px;
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-    }
-
-    .section {
-      margin-bottom: 30px;
-    }
-
-    h2 {
-      color: #fff000;
-      margin-bottom: 10px;
-    }
-
-    ul {
-      list-style: disc;
-      padding-left: 20px;
-    }
-
-    .cta-button {
-      background-color: #ff4444; /* soft red */
-      color: #ffffff;
+    .sidebar button {
+      background: #ff4444;
       border: none;
-      padding: 12px 24px;
-      font-size: 16px;
-      border-radius: 30px;
-      text-decoration: none;
+      color: white;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 8px;
       cursor: pointer;
       transition: background 0.3s ease;
     }
 
-    .cta-button:hover {
-      background-color: #cc0000;
+    .sidebar button:hover {
+      background: #cc0000;
+    }
+
+    .sidebar button.settings {
+      background: #ffaa00;
+    }
+
+    .sidebar button.settings:hover {
+      background: #cc8800;
+    }
+
+    /* Overlay */
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.4);
+      display: none;
+      z-index: 900;
+    }
+
+    .overlay.active {
+      display: block;
+    }
+
+    /* Top bar */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px 20px;
+    }
+
+    .menu-btn {
+      font-size: 26px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      color: white;
+    }
+
+    /* Main Content */
+    .main {
+      padding: 20px;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .header img {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border: 3px solid #fff000;
+      object-fit: cover;
+    }
+
+    .header h2 {
+      margin: 0;
+      font-size: 22px;
+      color: #fff000;
+    }
+
+    /* Cards grid */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 30px 20px;
+      border-radius: 16px;
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s ease, background 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      background: rgba(255, 255, 255, 0.2);
     }
 
     footer {
       text-align: center;
-      margin-top: 40px;
+      margin-top: 30px;
       font-size: 14px;
       color: #eee;
     }
-    #username {
-  margin-left: 1px;
-}
-.top-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px;
-}
-
-.notification-icon {
-  width: 24px;
-  height: 24px;
-}
-
-.welcome-message {
-  text-align: center;
-  margin-top: 20px;
-  font-size: 24px;
-  font-weight: bold;
-  color: #fff; /* Assuming your theme is dark */
-}
   </style>
 </head>
 <body>
 
-  <header>
-      <div class="top-bar">
-  <button onclick="logout()" style="float: left; margin-left: 20px; background-color: #cc0000; color: white; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer;">
-  Logout
-    </button>
-  <div class="notification-icon">🔔</div>
-</div>
-
-<!-- Centered Welcome Message -->
-<div class="welcome-message">
-  <h1>Welcome, <span id="username"></span></h1>
-</div>
-    
-    <p>You're part of the challenge. Be creative, stay active, and climb the leaderboard!</p>
-  </header>
-
-  <div class="container">
-    <div class="section">
-      <h2>Recent Updates</h2>
-      <ul>
-        <li>Submission deadline extended to July 25th</li>
-        <li>New contest rules published</li>
-        <li>Submit your profile picture</li>
-      </ul>
-    </div>
-
-    <div class="section">
-      <h2>Submission Tips</h2>
-      <ul>
-        <li>Make sure your entry follows the theme</li>
-        <li>Use clear and original content</li>
-        <li>Submit before the deadline</li>
-      </ul>
-    </div>
-
-    <div class="section">
-      <h2>Your Stats</h2>
-      <ul>
-        <li>Entries submitted: 3</li>
-        <li>Likes received: 124</li>
-        <li>Ranking: Top 12%</li>
-      </ul>
-    </div>
-
-    <a href="meme.html" class="cta-button">Submit New Entry</a>
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <button onclick="logout()">Sign Out</button>
+    <button onclick="deleteAccount()">Delete Account</button>
+    <button class="settings">Settings</button>
   </div>
 
-  <footer>
-    &copy; 2025 Contesto. All rights reserved.
-  </footer>
+  <!-- Overlay -->
+  <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+  <!-- Top bar -->
+  <div class="top-bar">
+    <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+    <h2>Contesto</h2>
+  </div>
+
+  <!-- Main Section -->
+  <div class="main">
+    <!-- Profile + Welcome -->
+    <div class="header">
+      <img id="profilePic" src="images/default-avatar.png" alt="Profile Picture">
+      <h2 id="welcomeNote">Welcome, Contestant</h2>
+    </div>
+
+    <!-- Cards -->
+    <div class="cards">
+      <div class="card">Contests</div>
+      <div class="card">Winnings History</div>
+      <div class="card">Results</div>
+      <div class="card">Claims</div>
+    </div>
+
+    <footer>
+      &copy; 2025 Contesto. All rights reserved.
+    </footer>
+  </div>
 
 <script>
-  // Load username from localStorage
-  const storedUser = localStorage.getItem("contestantUsername");
-  document.getElementById("username").textContent = storedUser || "Contestant";
-
-  // Logout function
-  function logout() {
-    localStorage.removeItem("contestantUsername");
-    window.location.href = "index.html";
+  // Sidebar toggle
+  function toggleSidebar() {
+    document.getElementById("sidebar").classList.toggle("active");
+    document.getElementById("overlay").classList.toggle("active");
   }
 
-  // Optional: redirect to login if not logged in
- // if (!storedUser) {
-  //  window.location.href = "reward-login.html";
-  //}
+  // Load user from localStorage
+  const user = JSON.parse(localStorage.getItem("user"));
+
+  if (user) {
+    const profilePic = user.profilePic 
+      ? `https://contesto.onrender.com${user.profilePic}`
+      : "images/default-avatar.png";
+
+    document.getElementById("profilePic").src = profilePic;
+    document.getElementById("welcomeNote").textContent = `Welcome, ${user.fullName || user.username || "Contestant"}`;
+  } else {
+    window.location.href = "login.html";
+  }
+
+  // Logout
+  function logout() {
+    localStorage.removeItem("user");
+    window.location.href = "login.html";
+  }
+
+  // Delete Account
+  function deleteAccount() {
+    if (confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
+      // TODO: Add API call to delete account here
+      localStorage.removeItem("user");
+      alert("Your account has been deleted.");
+      window.location.href = "register.html";
+    }
+  }
 </script>
 
 </body>
-                              </html>
+  </html>
