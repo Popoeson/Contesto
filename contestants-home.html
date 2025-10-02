@@ -18,10 +18,10 @@
     .sidebar {
       position: fixed;
       top: 0;
-      left: -250px;
+      left: -260px; /* completely off-screen by default */
       width: 250px;
       height: 100%;
-      background: rgba(0, 0, 0, 0.8);
+      background: rgba(0, 0, 0, 0.9);
       backdrop-filter: blur(6px);
       padding: 20px;
       box-shadow: 2px 0 8px rgba(0,0,0,0.4);
@@ -32,7 +32,7 @@
     }
 
     .sidebar.active {
-      left: 0;
+      left: 0; /* slides in when active */
     }
 
     .sidebar button {
@@ -44,6 +44,7 @@
       border-radius: 8px;
       cursor: pointer;
       transition: background 0.3s ease;
+      font-size: 16px;
     }
 
     .sidebar button:hover {
@@ -83,7 +84,7 @@
     }
 
     .menu-btn {
-      font-size: 26px;
+      font-size: 28px;
       cursor: pointer;
       background: none;
       border: none;
@@ -119,8 +120,20 @@
     /* Cards grid */
     .cards {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      grid-template-columns: repeat(2, 1fr); /* 2 per row by default */
       gap: 20px;
+    }
+
+    @media (min-width: 768px) {
+      .cards {
+        grid-template-columns: repeat(3, 1fr); /* 3 per row on tablets */
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .cards {
+        grid-template-columns: repeat(4, 1fr); /* 4 per row on desktop */
+      }
     }
 
     .card {
@@ -151,9 +164,9 @@
 
   <!-- Sidebar -->
   <div class="sidebar" id="sidebar">
-    <button onclick="logout()">Sign Out</button>
-    <button onclick="deleteAccount()">Delete Account</button>
-    <button class="settings">Settings</button>
+    <button onclick="logout()">🚪 Sign Out</button>
+    <button onclick="deleteAccount()">🗑 Delete Account</button>
+    <button class="settings">⚙ Settings</button>
   </div>
 
   <!-- Overlay -->
@@ -204,25 +217,24 @@
     document.getElementById("profilePic").src = profilePic;
     document.getElementById("welcomeNote").textContent = `Welcome, ${user.fullName || user.username || "Contestant"}`;
   } else {
-    window.location.href = "reward-login.html";
+    window.location.href = "login.html";
   }
 
   // Logout
   function logout() {
     localStorage.removeItem("user");
-    window.location.href = "reward-login.html";
+    window.location.href = "login.html";
   }
 
   // Delete Account
   function deleteAccount() {
     if (confirm("Are you sure you want to delete your account? This action cannot be undone.")) {
-      // TODO: Add API call to delete account here
       localStorage.removeItem("user");
       alert("Your account has been deleted.");
-      window.location.href = "reward-register.html";
+      window.location.href = "register.html";
     }
   }
 </script>
 
 </body>
-  </html>
+        </html>
