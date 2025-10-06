@@ -349,7 +349,6 @@ app.get('/api/users/:id', async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch user' });
   }
 });
-
 // 📋 Get All Users (Admin)
 app.get('/api/users', async (req, res) => {
   try {
@@ -359,12 +358,14 @@ app.get('/api/users', async (req, res) => {
       serial: index + 1,
       id: user._id,
       profilePicture: user.profilePicture || "https://via.placeholder.com/100x100?text=User",
+      fullName: user.fullName || "N/A",
+      username: user.username || "N/A",
       email: user.email,
       phone: user.phone,
       location: user.location || "N/A",
       about: user.about || "N/A",
-      interest: user.interest || "N/A",
-      socials: user.social || [],   // assuming array of links
+      interest: user.interests && user.interests.length ? user.interests.join(", ") : "N/A",
+      socials: user.social && user.social.length ? user.social : [],
       status: user.status || "active",
       createdAt: user.createdAt
     })));
@@ -373,7 +374,6 @@ app.get('/api/users', async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch users' });
   }
 });
-
 
 // ==========================
 // 🔴 Deactivate User (Admin)
