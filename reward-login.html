@@ -200,15 +200,15 @@
       const data = await res.json();
 
       if (res.ok) {
-        // ✅ save to localStorage
-        localStorage.setItem('user', JSON.stringify(data.user));
+  localStorage.removeItem('user'); // ✅ clear old user
+  localStorage.setItem('user', JSON.stringify(data.user));
+  
+  overlay.style.display = 'none';
+  spinner.style.display = 'none';
+  formBox.classList.remove('blur');
 
-        // ✅ clear spinner/overlay before redirect
-        overlay.style.display = 'none';
-        spinner.style.display = 'none';
-        formBox.classList.remove('blur');
-
-        window.location.href = 'contestants-home.html';
+  window.location.href = 'contestants-home.html';
+    }
       } else {
         throw new Error(data.message || 'Login failed');
       }
