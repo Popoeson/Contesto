@@ -305,22 +305,19 @@ app.post('/api/users/login', async (req, res) => {
     }
 
     res.json({
-      message: 'Login successful',
-      user: {
-        id: user._id,
-        fullName: user.fullName,
-        username: user.username,
-        email: user.email,
-        phone: user.phone,
-        createdAt: user.createdAt
-      }
-    });
-  } catch (err) {
-    console.error('Login Error:', err);
-    res.status(500).json({ message: 'Login failed' });
+  message: 'Login successful',
+  user: {
+    id: user._id,
+    fullName: user.fullName,
+    username: user.username,
+    email: user.email,
+    phone: user.phone,
+    profilePicture: user.profilePicture, // ✅ include this
+    createdAt: user.createdAt
   }
 });
 
+    
 
 // ==========================
 // 👤 Get User by ID
