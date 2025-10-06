@@ -2,162 +2,190 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Captions Feed</title>
+  <title>All Captions - Contesto</title>
   <style>
     body {
       margin: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #f4f6f8;
-      color: #222;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, royalblue, cyan);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      min-height: 100vh;
     }
 
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 15px;
-    }
-
-    .meme-container {
-      text-align: center;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    h1 {
       margin-bottom: 20px;
-      overflow: hidden;
+      text-align: center;
     }
 
-    .meme-container img {
-      width: 100%;
+    .meme-preview {
+      background-color: rgba(0, 0, 50, 0.7);
       border-radius: 12px;
-      object-fit: cover;
+      padding: 15px;
+      box-shadow: 0 0 10px #000;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .meme-preview img {
+      width: 100%;
+      border-radius: 10px;
+      border: 2px solid #fff;
+      object-fit: contain;
+      max-height: 300px;
+    }
+
+    .caption-list {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      width: 100%;
+      max-width: 400px;
     }
 
     .caption-card {
-      background: white;
+      background-color: rgba(0, 0, 50, 0.6);
       border-radius: 12px;
       padding: 15px;
-      margin-bottom: 15px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
       display: flex;
       align-items: flex-start;
-      gap: 12px;
+      gap: 10px;
+      box-shadow: 0 0 8px #000;
     }
 
     .caption-card img {
-      width: 45px;
-      height: 45px;
+      width: 50px;
+      height: 50px;
       border-radius: 50%;
       object-fit: cover;
+      border: 2px solid #fff;
     }
 
-    .caption-content {
+    .caption-info {
       flex: 1;
     }
 
-    .caption-username {
-      font-weight: bold;
-      color: #0056b3;
+    .caption-info h3 {
+      margin: 0;
+      font-size: 16px;
+      color: #ffcc00;
     }
 
-    .caption-time {
-      font-size: 13px;
-      color: gray;
-    }
-
-    .caption-text {
+    .caption-info p {
       margin: 5px 0;
       font-size: 15px;
-      color: #333;
+    }
+
+    .time {
+      font-size: 12px;
+      color: #ccc;
+      margin-top: 4px;
     }
 
     .empty {
       text-align: center;
-      color: gray;
-      font-size: 15px;
+      color: #eee;
       margin-top: 30px;
+      font-style: italic;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div id="memeContainer" class="meme-container">
-      <p>Loading latest meme...</p>
-    </div>
+  <h1>🗨️ All Captions</h1>
 
-    <div id="captionsFeed">
-      <p class="empty">Loading captions...</p>
-    </div>
+  <div class="meme-preview" id="memeContainer">
+    <p>Loading meme...</p>
+  </div>
+
+  <div class="caption-list" id="captionList">
+    <p class="empty">Loading captions...</p>
   </div>
 
   <script>
-  const memeContainer = document.getElementById('memeContainer');
-  const captionsFeed = document.getElementById('captionsFeed');
+    const API_BASE_URL = "https://contesto.onrender.com";
 
-  function timeAgo(date) {
-    const seconds = Math.floor((new Date() - new Date(date)) / 1000);
-    const intervals = {
-      year: 31536000,
-      month: 2592000,
-      week: 604800,
-      day: 86400,
-      hour: 3600,
-      minute: 60,
-    };
-    for (let key in intervals) {
-      const value = Math.floor(seconds / intervals[key]);
-      if (value >= 1) return `${value}${key[0]} ago`;
-    }
-    return 'Just now';
-  }
+    // 🧩 Time formatter like "2m ago"
+    function timeAgo(date) {
+      const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+      const intervals = {
+        year: 31536000,
+        month: 2592000,
+        week: 604800,
+        day: 86400,
+        hour: 3600,
+        minute: 60
+      };
 
-  async function fetchMeme() {
-    try {
-      const res = await fetch('https://contesto.onrender.com/api/memes/latest');
-      const meme = await res.json();
-      memeContainer.innerHTML = `
-        <img src="${meme.url || meme.image || meme.memeUrl}" alt="Latest Meme">
-      `;
-    } catch (err) {
-      console.error('Meme load error:', err);
-      memeContainer.innerHTML = `<p class="empty">No meme uploaded yet.</p>`;
-    }
-  }
-
-  async function fetchCaptions() {
-    try {
-      const res = await fetch('https://contesto.onrender.com/api/caption-check');
-      const captions = await res.json();
-
-      if (!captions.length) {
-        captionsFeed.innerHTML = `<p class="empty">Be the first to caption this meme!</p>`;
-        return;
+      for (let key in intervals) {
+        const value = Math.floor(seconds / intervals[key]);
+        if (value >= 1) return `${value}${key[0]} ago`;
       }
-
-      captionsFeed.innerHTML = captions.map(c => {
-        // handle both direct and nested username/profilePicture
-        const username = c.username || c.user?.username || 'Unknown';
-        const profilePic = c.profilePicture || c.user?.profilePicture || `https://via.placeholder.com/100?text=${encodeURIComponent(username.charAt(0).toUpperCase())}`;
-
-        return `
-          <div class="caption-card">
-            <img src="${profilePic}" alt="User">
-            <div class="caption-content">
-              <div class="caption-username">${username}</div>
-              <div class="caption-text">${c.caption}</div>
-              <div class="caption-time">${timeAgo(c.createdAt)}</div>
-            </div>
-          </div>
-        `;
-      }).join('');
-    } catch (err) {
-      console.error('Caption load error:', err);
-      captionsFeed.innerHTML = `<p class="empty">Error loading captions.</p>`;
+      return "Just now";
     }
-  }
 
-  fetchMeme();
-  fetchCaptions();
+    // ✅ Load latest meme
+    async function loadMeme() {
+      const container = document.getElementById("memeContainer");
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/memes/latest`);
+        const meme = await res.json();
+
+        if (meme && meme.imageUrl) {
+          container.innerHTML = `
+            <img src="${meme.imageUrl}" alt="Latest Meme">
+          `;
+        } else {
+          container.innerHTML = `<p>No meme available yet.</p>`;
+        }
+      } catch (err) {
+        console.error("Meme load error:", err);
+        container.innerHTML = `<p>Failed to load meme.</p>`;
+      }
+    }
+
+    // ✅ Load all captions
+    async function loadCaptions() {
+      const list = document.getElementById("captionList");
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/caption-check`);
+        const captions = await res.json();
+
+        if (!captions.length) {
+          list.innerHTML = `<p class="empty">No captions yet.</p>`;
+          return;
+        }
+
+        list.innerHTML = captions.map(c => {
+          const username = c.username || "Unknown";
+          const profilePic = c.profilePicture || `https://via.placeholder.com/100?text=${encodeURIComponent(username[0] || 'U')}`;
+          const captionText = c.caption || "";
+          const time = c.createdAt ? timeAgo(c.createdAt) : "";
+
+          return `
+            <div class="caption-card">
+              <img src="${profilePic}" alt="${username}">
+              <div class="caption-info">
+                <h3>${username}</h3>
+                <p>${captionText}</p>
+                <div class="time">${time}</div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch (err) {
+        console.error("Caption fetch error:", err);
+        list.innerHTML = `<p class="empty">Failed to load captions.</p>`;
+      }
+    }
+
+    // 🚀 Initialize
+    loadMeme();
+    loadCaptions();
   </script>
 </body>
 </html>
