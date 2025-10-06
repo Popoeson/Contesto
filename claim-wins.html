@@ -102,6 +102,15 @@
       transform: scale(1.05);
     }
 
+    .confetti {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      top: 0;
+      border-radius: 50%;
+      animation: fall 3s linear infinite;
+    }
+
     @keyframes fadeIn {
       from { opacity: 0; transform: scale(0.9); }
       to { opacity: 1; transform: scale(1); }
@@ -110,6 +119,13 @@
     @keyframes bounce {
       0%, 100% { transform: translateY(0); }
       50% { transform: translateY(-6px); }
+    }
+
+    @keyframes fall {
+      to {
+        transform: translateY(100vh) rotate(360deg);
+        opacity: 0;
+      }
     }
   </style>
 </head>
@@ -124,7 +140,10 @@
 
   <script>
     const API_BASE_URL = "https://contesto.onrender.com";
-    const username = localStorage.getItem("loggedInUser");
+
+    // ✅ Correctly read user info from localStorage
+    const loggedInUser = JSON.parse(localStorage.getItem("user"));
+    const username = loggedInUser?.username || null;
 
     function createConfetti() {
       for (let i = 0; i < 30; i++) {
@@ -142,6 +161,7 @@
       try {
         const res = await fetch(`${API_BASE_URL}/api/winners`);
         const winners = await res.json();
+
         if (!winners.length) {
           container.innerHTML = `<p>No winners have been announced yet. Stay tuned! 🌟</p>`;
           return;
