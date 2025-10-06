@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Winners | Contesto</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, royalblue, cyan);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 15px;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 700px;
+      margin-bottom: 25px;
+    }
+
+    header a {
+      text-decoration: none;
+      color: #fff;
+      font-size: 24px;
+      background-color: rgba(0, 0, 50, 0.5);
+      padding: 8px 12px;
+      border-radius: 10px;
+      transition: background 0.3s;
+    }
+
+    header a:hover {
+      background-color: rgba(0, 0, 80, 0.8);
+    }
+
+    header h1 {
+      flex: 1;
+      text-align: center;
+      font-size: 20px;
+      margin: 0;
+    }
+
+    .winner-list {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      width: 100%;
+      max-width: 700px;
+    }
+
+    .winner-card {
+      background-color: rgba(0, 0, 50, 0.7);
+      border-radius: 14px;
+      padding: 15px;
+      box-shadow: 0 0 10px #000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      transition: transform 0.2s ease;
+    }
+
+    .winner-card:hover {
+      transform: scale(1.02);
+    }
+
+    .meme-img {
+      width: 100%;
+      max-height: 250px;
+      object-fit: cover;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      border: 2px solid #fff;
+    }
+
+    .profile-pic {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border: 2px solid gold;
+      object-fit: cover;
+      margin-top: 5px;
+    }
+
+    .username {
+      color: gold;
+      font-weight: bold;
+      margin-top: 8px;
+    }
+
+    .caption {
+      font-style: italic;
+      margin: 6px 0;
+      color: #eee;
+      font-size: 14px;
+    }
+
+    .time {
+      font-size: 12px;
+      color: #ccc;
+    }
+
+    .reward-status {
+      margin-top: 8px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .claimed {
+      color: #00ff88;
+    }
+
+    .not-claimed {
+      color: #ff4444;
+    }
+
+    .empty {
+      margin-top: 30px;
+      text-align: center;
+      font-style: italic;
+      color: #eee;
+    }
+
+    @media (max-width: 500px) {
+      header h1 { font-size: 18px; }
+      .meme-img { max-height: 200px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="contestants-home.html">🏠</a>
+    <h1>🏆 Contesto Winners</h1>
+  </header>
+
+  <div class="winner-list" id="winnerList">
+    <p class="empty">Loading winners...</p>
+  </div>
+
+  <script>
+    const API_BASE_URL = "https://contesto.onrender.com";
+
+    function timeAgo(date) {
+      const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+      const intervals = { year: 31536000, month: 2592000, week: 604800, day: 86400, hour: 3600, minute: 60 };
+      for (let key in intervals) {
+        const value = Math.floor(seconds / intervals[key]);
+        if (value >= 1) return `${value}${key[0]} ago`;
+      }
+      return "Just now";
+    }
+
+    async function loadWinners() {
+      const list = document.getElementById("winnerList");
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/winner/all`);
+        const winners = await res.json();
+
+        if (!winners.length) {
+          list.innerHTML = `<p class="empty">No winners yet.</p>`;
+          return;
+        }
+
+        list.innerHTML = winners.map(w => {
+          const username = w.username || "Unknown";
+          const profilePic = w.profilePicture || `https://via.placeholder.com/100?text=${encodeURIComponent(username[0] || 'U')}`;
+          const caption = w.caption || "";
+          const meme = w.meme || "";
+          const time = w.createdAt ? timeAgo(w.createdAt) : "";
+          const claimed = w.rewardClaimed; // Boolean (to be implemented)
+          
+          return `
+            <div class="winner-card">
+              <img src="${meme}" class="meme-img" alt="Meme">
+              <img src="${profilePic}" class="profile-pic" alt="Winner">
+              <div class="username">${username}</div>
+              <div class="caption">"${caption}"</div>
+              <div class="time">${time}</div>
+              <div class="reward-status ${claimed ? 'claimed' : 'not-claimed'}">
+                ${claimed ? '🟢 Reward Claimed' : '🔴 Not Claimed'}
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch (error) {
+        console.error(error);
+        list.innerHTML = `<p class="empty">Failed to load winners.</p>`;
+      }
+    }
+
+    loadWinners();
+  </script>
+</body>
+</html>
