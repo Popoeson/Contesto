@@ -106,16 +106,29 @@ const captionSchema = new mongoose.Schema({
   profilePicture: { type: String }, // store the user's profile image url
   caption: { type: String, required: true },
 }, { timestamps: true });
+
+//=========================
+// 🎉 Winner Schema
+//=========================
+const winnerSchema = new mongoose.Schema({
+  username: { type: String, required: true },
+  caption: { type: String, required: true },
+  meme: { type: String, required: true },
+  profilePicture: { type: String },
+  pickedAt: { type: Date, default: Date.now }
+});
+
 // Models
 const User = mongoose.model('User', userSchema);
 const Meme = mongoose.model('Meme', memeSchema);
 const Caption = mongoose.model("Caption", captionSchema);
-
+const Winner = mongoose.model("Winner", winnerSchema);
 // Export models together
 module.exports = {
   Caption,
   Meme,
-  User
+  User,
+  Winner
 };
 // ==========================
 // 📤 Upload Meme Route
@@ -541,6 +554,38 @@ app.get('/api/caption-check', async (req, res) => {
   } catch (err) {
     console.error("❌ Error fetching captions:", err);
     res.status(500).json({ message: "Server error fetching captions." });
+  }
+});
+
+// ===============================
+// 🎯 Save Random Winner
+// ===============================
+app.post("/api/winner/save", async (req, res) => {
+  try {
+    const { username, caption, meme, profilePicture } = req.body;
+
+    if (!username || !caption || !meme) {
+      return res.status(400).json({ message: "Username, caption, and meme are required." });
+    }
+
+    // 🛑 Prevent duplicate winner for the same meme
+    const existingWinner = await Winner.findOne({ meme });
+    if (existingWinner) {
+      return res.status(409).json({ message: "Winner already picked for this meme." });
+    }
+
+    // ✅ Save the winner
+    const newWinner = new Winner({ username, caption, meme, profilePicture });
+    await newWinner.save();
+
+    res.status(201).json({
+      message: "Winner saved successfully!",
+      winner: newWinner
+    });
+
+  } catch (error) {
+    console.error("Error saving winner:", error);
+    res.status(500).json({ message: "Server error saving winner." });
   }
 });
 
