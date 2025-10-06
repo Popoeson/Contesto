@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🏆 Contest Winner - Contesto</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, royalblue, cyan);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      text-align: center;
+      padding: 20px;
+      overflow: hidden;
+    }
+
+    header {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+    }
+
+    header a {
+      text-decoration: none;
+      font-size: 22px;
+      color: #fff;
+      background: rgba(0,0,50,0.6);
+      padding: 8px 12px;
+      border-radius: 10px;
+      transition: 0.3s;
+    }
+
+    header a:hover {
+      background: rgba(0,0,80,0.8);
+    }
+
+    .winner-container {
+      background: rgba(0, 0, 50, 0.6);
+      border-radius: 16px;
+      padding: 25px;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+      animation: fadeIn 1.2s ease-in-out;
+    }
+
+    .winner-img {
+      width: 100%;
+      border-radius: 12px;
+      border: 2px solid #fff;
+      margin-bottom: 20px;
+    }
+
+    .profile-pic {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: 3px solid gold;
+      object-fit: cover;
+      margin-bottom: 10px;
+      animation: bounce 1.5s infinite;
+    }
+
+    .username {
+      font-size: 22px;
+      font-weight: bold;
+      color: #ffdf00;
+    }
+
+    .caption {
+      font-size: 16px;
+      margin-top: 10px;
+      color: #fff;
+      font-style: italic;
+    }
+
+    .message {
+      margin-top: 20px;
+      font-size: 18px;
+      line-height: 1.4;
+    }
+
+    .claim-btn {
+      background-color: gold;
+      color: black;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 10px;
+      margin-top: 20px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+
+    .claim-btn:hover {
+      transform: scale(1.05);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="contestants-home.html">🏠</a>
+  </header>
+
+  <div class="winner-container" id="winnerContainer">
+    <p>Loading winner...</p>
+  </div>
+
+  <script>
+    const API_BASE_URL = "https://contesto.onrender.com";
+    const username = localStorage.getItem("loggedInUser");
+
+    function createConfetti() {
+      for (let i = 0; i < 30; i++) {
+        const conf = document.createElement('div');
+        conf.className = 'confetti';
+        conf.style.left = Math.random() * 100 + 'vw';
+        conf.style.background = ['gold', 'white', 'yellow', 'cyan'][Math.floor(Math.random() * 4)];
+        conf.style.animationDelay = Math.random() * 2 + 's';
+        document.body.appendChild(conf);
+      }
+    }
+
+    async function loadWinner() {
+      const container = document.getElementById("winnerContainer");
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/winners`);
+        const winners = await res.json();
+        if (!winners.length) {
+          container.innerHTML = `<p>No winners have been announced yet. Stay tuned! 🌟</p>`;
+          return;
+        }
+
+        const latest = winners[0];
+        const isUserWinner = username && latest.username === username;
+
+        const memeImg = latest.meme || "";
+        const profilePic = latest.profilePicture || `https://via.placeholder.com/100?text=${latest.username[0]}`;
+        const caption = latest.caption || "";
+
+        if (isUserWinner) {
+          createConfetti();
+          container.innerHTML = `
+            <img src="${memeImg}" class="winner-img" alt="Winning Meme">
+            <img src="${profilePic}" class="profile-pic" alt="Winner">
+            <div class="username">${latest.username}</div>
+            <div class="caption">"${caption}"</div>
+            <div class="message">🎉 Congratulations, <strong>${latest.username}</strong>!<br>
+            Your caption won this round of Contesto! You're officially a star 🌟</div>
+            <button class="claim-btn" onclick="goToClaim('${latest._id}')">Claim Reward 🏆</button>
+          `;
+        } else {
+          container.innerHTML = `
+            <img src="${memeImg}" class="winner-img" alt="Winning Meme">
+            <img src="${profilePic}" class="profile-pic" alt="Winner">
+            <div class="username">${latest.username}</div>
+            <div class="caption">"${caption}"</div>
+            <div class="message">😅 Not this time <strong>${username || 'friend'}</strong> — but your moment is coming! Keep those creative captions coming 🔥</div>
+          `;
+        }
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = `<p>Failed to load winner. Please try again later.</p>`;
+      }
+    }
+
+    function goToClaim(winnerId) {
+      localStorage.setItem('claimWinnerId', winnerId);
+      window.location.href = 'claim-chat.html';
+    }
+
+    loadWinner();
+  </script>
+</body>
+</html>
