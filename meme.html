@@ -102,90 +102,98 @@
     <div id="timer">⏳ Result will be announced at 9:00 PM</div>
   </div>
 
-  <script>
-  const username = localStorage.getItem("contestantUsername");
+  
+<script>
+const username = localStorage.getItem("contestantUsername");
 
-  if (!username) {
-    alert("You must login first");
-    window.location.href = "reward-login.html";
-  }
+if (!username) {
+  alert("You must login first");
+  window.location.href = "reward-login.html";
+}
 
-  const submitBtn = document.getElementById("submitBtn");
-  const spinner = document.getElementById("spinner");
-  const captionInput = document.getElementById("captionInput");
-  const successMsg = document.getElementById("successMsg");
-  const memeImage = document.getElementById("memeImage");
+const submitBtn = document.getElementById("submitBtn");
+const spinner = document.getElementById("spinner");
+const captionInput = document.getElementById("captionInput");
+const successMsg = document.getElementById("successMsg");
+const memeImage = document.getElementById("memeImage");
 
-  const API_BASE_URL = "https://contesto.onrender.com";
+const API_BASE_URL = "https://contesto.onrender.com";
 
+let memeData = null;
 
-
-   async function loadMeme() {
+// ✅ Load latest meme
+async function loadMeme() {
   try {
     const res = await fetch(`${API_BASE_URL}/api/memes/latest`);
-    const meme = await res.json();
+    memeData = await res.json();
 
-    if (meme && meme.imageUrl) {
-      memeImage.src = meme.imageUrl;
+    if (memeData && memeData.imageUrl) {
+      memeImage.src = memeData.imageUrl;
     } else {
       console.warn("No meme found or invalid format");
     }
   } catch (err) {
-    console.error("Error loading meme:", err)
-    }
-    }
+    console.error("Error loading meme:", err);
+  }
+}
 
-  loadMeme();
+loadMeme();
 
-  submitBtn.addEventListener("click", async () => {
-    const caption = captionInput.value.trim();
-    const meme = memeImage.src;
+// ✅ Submit caption
+submitBtn.addEventListener("click", async () => {
+  const caption = captionInput.value.trim();
 
-    if (!caption) {
+  if (!caption) {
     alert("Please enter a caption before submitting.");
+    return;
+  }
+  if (!memeData) {
+    alert("No meme loaded.");
+    return;
+  }
+
+  spinner.style.display = "block";
+  submitBtn.disabled = true;
+
+  const meme = memeData.imageUrl;
+  const memeId = memeData._id;
+
+  try {
+    // 🔍 Prevent duplicate caption
+    const checkRes = await fetch(`${API_BASE_URL}/api/captions/check?username=${encodeURIComponent(username)}&meme=${encodeURIComponent(meme)}&memeId=${encodeURIComponent(memeId)}&caption=${encodeURIComponent(caption)}`);
+    const checkData = await checkRes.json();
+
+    if (checkRes.ok && checkData.exists) {
+      alert("❌ You've already submitted a caption for this meme.");
+      spinner.style.display = "none";
+      submitBtn.disabled = false;
       return;
     }
-    spinner.style.display = "block";
-    submitBtn.disabled = true;
 
-    try {
-      // 🔍 Check for existing caption for this user and meme
-      const checkRes = await fetch(`${API_BASE_URL}/api/captions/check?username=${encodeURIComponent(username)}&meme=${encodeURIComponent(meme)}&caption=${encodeURIComponent(caption)}`);
-      const checkData = await checkRes.json();
+    // ✅ Submit caption properly
+    const response = await fetch(`${API_BASE_URL}/api/captions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, caption, meme, memeId })
+    });
 
-      if (checkRes.ok && checkData.exists) {
-        alert("❌ You've already submitted a caption for this meme.");
-        spinner.style.display = "none";
-        submitBtn.disabled = false;
-        return;
-      }
+    const result = await response.json();
+    spinner.style.display = "none";
+    submitBtn.disabled = false;
 
-      // ✅ Proceed to submit
-      const response = await fetch(`${API_BASE_URL}/api/captions`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username, caption, meme }),
-      });
-
-      const result = await response.json();
-      spinner.style.display = "none";
-      submitBtn.disabled = false;
-
-      if (response.ok) {
-        successMsg.textContent = "✅ Caption submitted successfully!";
-        captionInput.value = "";
-      } else {
-        alert("❌ " + (result.message || "Submission failed."));
-      }
-    } catch (err) {
-      console.error(err);
-      alert("❌ Error submitting caption.");
-      spinner.style.display = "none";
-      submitBtn.disabled = false;
+    if (response.ok) {
+      successMsg.textContent = "✅ Caption submitted successfully!";
+      captionInput.value = "";
+    } else {
+      alert("❌ " + (result.message || "Submission failed."));
     }
-  });
-  </script>
+  } catch (err) {
+    console.error("Error submitting caption:", err);
+    alert("❌ Error submitting caption.");
+    spinner.style.display = "none";
+    submitBtn.disabled = false;
+  }
+});
+</script>
 </body>
 </html>
