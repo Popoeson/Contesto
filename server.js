@@ -589,6 +589,18 @@ app.post("/api/winner/save", async (req, res) => {
   }
 });
 
+//======================
+// Fetch Winners 
+//======================
+app.get("/api/winners", async (req, res) => {
+  try {
+    const winners = await Winner.find().sort({ pickedAt: -1 });
+    res.json(winners);
+  } catch (error) {
+    console.error("Error fetching winners:", error);
+    res.status(500).json({ message: "Error fetching winners." });
+  }
+});
 //==========================
 // 🚫 Error Handling 
 //===========================
