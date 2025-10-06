@@ -164,12 +164,12 @@
     <div class="spinner"></div>
   </div>
 
-  <script>
+<script>
   const toggle = document.getElementById('togglePassword');
   const password = document.getElementById('password');
   const loginForm = document.getElementById('loginForm');
   const loginBtn = document.getElementById('loginBtn');
-  const overlay = document.getElementById('overlay'); // ✅ fixed
+  const overlay = document.getElementById('overlay');
   const spinner = document.querySelector('.spinner');
   const errorMsg = document.getElementById('errorMsg');
   const formBox = document.getElementById('formBox');
@@ -182,7 +182,7 @@
 
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    overlay.style.display = 'flex'; // Show overlay when submitting
+    overlay.style.display = 'flex';
     spinner.style.display = 'flex';
     formBox.classList.add('blur');
     errorMsg.textContent = '';
@@ -200,15 +200,15 @@
       const data = await res.json();
 
       if (res.ok) {
-  localStorage.removeItem('user'); // ✅ clear old user
-  localStorage.setItem('user', JSON.stringify(data.user));
-  
-  overlay.style.display = 'none';
-  spinner.style.display = 'none';
-  formBox.classList.remove('blur');
+        // ✅ clear old data & save new user
+        localStorage.removeItem('user');
+        localStorage.setItem('user', JSON.stringify(data.user));
 
-  window.location.href = 'contestants-home.html';
-    }
+        overlay.style.display = 'none';
+        spinner.style.display = 'none';
+        formBox.classList.remove('blur');
+
+        window.location.href = 'contestants-home.html';
       } else {
         throw new Error(data.message || 'Login failed');
       }
@@ -220,6 +220,6 @@
       formBox.classList.remove('blur');
     }
   });
-  </script>
+</script>
 </body>
   </html>
