@@ -98,38 +98,14 @@ const memeSchema = new mongoose.Schema({
 //==========================
 // 📃 Caption Schema 
 //=========================
-app.post('/api/captions', async (req, res) => {
-  try {
-    const { meme, memeId, username, caption, userId, profilePicture } = req.body;
-
-    if (!meme || !username || !caption) {
-      return res.status(400).json({ message: 'Meme, username, and caption are required' });
-    }
-
-    // Prevent exact duplicate from same user
-    const exists = await Caption.exists({ username, meme, memeId, caption });
-    if (exists) {
-      return res.status(409).json({ message: 'Duplicate caption: You have already submitted this caption for this meme.' });
-    }
-
-    const newCaption = new Caption({
-      meme,
-      memeId,
-      userId: userId || undefined,
-      username,
-      profilePicture: profilePicture || undefined,
-      caption
-    });
-
-    await newCaption.save();
-    res.status(201).json({ message: 'Caption submitted successfully', caption: newCaption });
-
-  } catch (error) {
-    console.error('Caption Submission Error:', error);
-    res.status(500).json({ message: 'Error submitting caption' });
-  }
-});
-
+const captionSchema = new mongoose.Schema({
+  meme: { type: String, required: true },
+  memeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Meme' },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // optional
+  username: { type: String, required: true },
+  profilePicture: { type: String }, // store the user's profile image url
+  caption: { type: String, required: true },
+}, { timestamps: true });
 // Models
 const User = mongoose.model('User', userSchema);
 const Meme = mongoose.model('Meme', memeSchema);
