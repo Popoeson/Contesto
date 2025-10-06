@@ -194,12 +194,12 @@
 
         list.innerHTML = captions.map(c => {
           const username = c.username || "Unknown";
-          const profilePic = c.profilePicture || `https://via.placeholder.com/100?text=${encodeURIComponent(N/A[0] || 'U')}`;
+          const profilePic = c.profilePicture || `https://via.placeholder.com/100?text=${encodeURIComponent(username[0] || 'U')}`;
           const captionText = c.caption || "";
           const time = c.createdAt ? timeAgo(c.createdAt) : "";
           return `
             <div class="caption-card">
-              <img src="${profilePic}" alt="${username}">
+              <img src="${profilePic}" alt="N/A">
               <div class="caption-info">
                 <h3>${username}</h3>
                 <p>${captionText}</p>
