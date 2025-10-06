@@ -530,7 +530,21 @@ app.post('/api/captions', async (req, res) => {
 app.get('/api/caption-check', async (req, res) => {
   try {
     const captions = await Caption.find().sort({ createdAt: -1 });
-    res.status(200).json(captions);
+
+    // Fetch user data for each caption (parallelized)
+    const enriched = await Promise.all(captions.map(async (cap) => {
+      const user = await User.findOne({ username: cap.username });
+      return {
+        _id: cap._id,
+        username: cap.username,
+        caption: cap.caption,
+        createdAt: cap.createdAt,
+        meme: cap.meme,
+        profilePicture: user?.profilePicture || "https://via.placeholder.com/100?text=User"
+      };
+    }));
+
+    res.json(enriched);
   } catch (err) {
     console.error("❌ Error fetching captions:", err);
     res.status(500).json({ message: "Server error fetching captions." });
