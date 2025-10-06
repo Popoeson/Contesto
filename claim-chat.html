@@ -6,122 +6,171 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
-      margin: 0;
-      font-family: 'Poppins', sans-serif;
-      background: linear-gradient(135deg, royalblue, cyan);
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      overflow: hidden;
-    }
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(135deg, royalblue, cyan);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
 
-    header {
-      background: rgba(0,0,50,0.6);
-      padding: 15px;
-      text-align: center;
-      font-size: 20px;
-      font-weight: bold;
-      color: #fff;
-      position: relative;
-    }
+header {
+  background: rgba(0, 0, 50, 0.6);
+  padding: 10px 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
 
-    header a {
-      position: absolute;
-      left: 15px;
-      top: 15px;
-      text-decoration: none;
-      font-size: 22px;
-      color: #fff;
-      background: rgba(0,0,80,0.5);
-      padding: 6px 10px;
-      border-radius: 10px;
-      transition: 0.3s;
-    }
+header a {
+  text-decoration: none;
+  color: #fff;
+  font-size: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 5px 10px;
+  border-radius: 8px;
+}
 
-    header a:hover {
-      background: rgba(0,0,80,0.8);
-    }
+.chat-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+  height: calc(100vh - 120px);
+  box-sizing: border-box;
+}
 
-    .chat-container {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      padding: 15px;
-      background: rgba(0, 0, 50, 0.6);
-      border-radius: 16px;
-      margin: 15px;
-      overflow: hidden;
-      box-shadow: 0 0 20px rgba(0,0,0,0.3);
-    }
+.welcome {
+  text-align: center;
+  font-size: 18px;
+  background: rgba(0, 0, 50, 0.4);
+  margin: 10px auto;
+  padding: 10px 15px;
+  border-radius: 10px;
+  width: fit-content;
+}
 
-    .messages {
-      flex: 1;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      padding-right: 5px;
-      scrollbar-width: thin;
-    }
+.message {
+  max-width: 70%;
+  padding: 10px 15px;
+  border-radius: 15px;
+  margin: 6px 0;
+  animation: fadeIn 0.4s ease-in-out;
+  word-wrap: break-word;
+}
 
-    .message {
-      padding: 10px 14px;
-      border-radius: 12px;
-      max-width: 70%;
-      word-wrap: break-word;
-      animation: fadeIn 0.3s ease-in;
-    }
+.admin {
+  background: rgba(0, 0, 50, 0.7);
+  align-self: flex-start;
+  border-top-left-radius: 0;
+}
 
-    .message.user {
-      background: gold;
-      color: black;
-      align-self: flex-end;
-      border-bottom-right-radius: 0;
-    }
+.user {
+  background: gold;
+  color: black;
+  align-self: flex-end;
+  border-top-right-radius: 0;
+}
 
-    .message.admin {
-      background: rgba(255, 255, 255, 0.2);
-      color: #fff;
-      align-self: flex-start;
-      border-bottom-left-radius: 0;
-    }
+/* === Fixed and Responsive Chat Input === */
+.chat-input {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  background: rgba(0, 0, 50, 0.7);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  position: sticky;
+  bottom: 0;
+  width: 100%;
+  box-sizing: border-box;
+  backdrop-filter: blur(10px);
+  z-index: 20;
+}
 
-    .input-area {
-      display: flex;
-      gap: 10px;
-      padding-top: 10px;
-    }
+.chat-input input {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 10px;
+  outline: none;
+  font-size: 16px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #000;
+}
 
-    .input-area input {
-      flex: 1;
-      padding: 12px;
-      border-radius: 10px;
-      border: none;
-      outline: none;
-      font-size: 16px;
-    }
+.chat-input button {
+  margin-left: 8px;
+  background: gold;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  white-space: nowrap;
+}
 
-    .input-area button {
-      background-color: gold;
-      color: black;
-      border: none;
-      border-radius: 10px;
-      padding: 12px 18px;
-      cursor: pointer;
-      font-size: 16px;
-      transition: transform 0.3s ease;
-    }
+.chat-input button:hover {
+  transform: scale(1.05);
+}
 
-    .input-area button:hover {
-      transform: scale(1.05);
-    }
+/* === Adjustments for small screens === */
+@media (max-width: 600px) {
+  .chat-input input {
+    font-size: 14px;
+    padding: 8px;
+  }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(5px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+  .chat-input button {
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+}
+
+/* === Prevent keyboard overlap on mobile browsers === */
+@supports (-webkit-touch-callout: none) {
+  body {
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .chat-container {
+    height: calc(100vh - 60px);
+    overflow-y: auto;
+  }
+
+  .chat-input {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+  }
+}
+
+/* === Animations === */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes confettiFall {
+  to { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+
+.confetti {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  top: 0;
+  border-radius: 50%;
+  animation: confettiFall 3s linear infinite;
+      }
   </style>
 </head>
 <body>
