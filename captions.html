@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Captions Feed</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f4f6f8;
+      color: #222;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 15px;
+    }
+
+    .meme-container {
+      text-align: center;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+
+    .meme-container img {
+      width: 100%;
+      border-radius: 12px;
+      object-fit: cover;
+    }
+
+    .caption-card {
+      background: white;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .caption-card img {
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .caption-content {
+      flex: 1;
+    }
+
+    .caption-username {
+      font-weight: bold;
+      color: #0056b3;
+    }
+
+    .caption-time {
+      font-size: 13px;
+      color: gray;
+    }
+
+    .caption-text {
+      margin: 5px 0;
+      font-size: 15px;
+      color: #333;
+    }
+
+    .empty {
+      text-align: center;
+      color: gray;
+      font-size: 15px;
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="memeContainer" class="meme-container">
+      <p>Loading latest meme...</p>
+    </div>
+
+    <div id="captionsFeed">
+      <p class="empty">Loading captions...</p>
+    </div>
+  </div>
+
+  <script>
+    const memeContainer = document.getElementById('memeContainer');
+    const captionsFeed = document.getElementById('captionsFeed');
+
+    // Format "time ago"
+    function timeAgo(date) {
+      const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+      const intervals = {
+        year: 31536000,
+        month: 2592000,
+        week: 604800,
+        day: 86400,
+        hour: 3600,
+        minute: 60,
+      };
+      for (let key in intervals) {
+        const value = Math.floor(seconds / intervals[key]);
+        if (value >= 1) return `${value}${key[0]} ago`;
+      }
+      return 'Just now';
+    }
+
+    // Fetch latest meme
+    async function fetchMeme() {
+      try {
+        const res = await fetch('https://contesto.onrender.com/api/memes/latest');
+        if (!res.ok) throw new Error('No meme found');
+        const meme = await res.json();
+        memeContainer.innerHTML = `<img src="${meme.url}" alt="Latest Meme">`;
+      } catch (err) {
+        memeContainer.innerHTML = `<p class="empty">No meme uploaded yet.</p>`;
+      }
+    }
+
+    // Fetch all captions
+    async function fetchCaptions() {
+      try {
+        const res = await fetch('https://contesto.onrender.com/api/caption-check');
+        const captions = await res.json();
+
+        if (!captions.length) {
+          captionsFeed.innerHTML = `<p class="empty">Be the first to caption this meme!</p>`;
+          return;
+        }
+
+        captionsFeed.innerHTML = captions.map(c => `
+          <div class="caption-card">
+            <img src="${c.profilePicture || 'https://via.placeholder.com/45'}" alt="User">
+            <div class="caption-content">
+              <div class="caption-username">${c.username}</div>
+              <div class="caption-text">${c.caption}</div>
+              <div class="caption-time">${timeAgo(c.createdAt)}</div>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        console.error(err);
+        captionsFeed.innerHTML = `<p class="empty">Error loading captions.</p>`;
+      }
+    }
+
+    fetchMeme();
+    fetchCaptions();
+  </script>
+</body>
+</html>
