@@ -98,26 +98,37 @@ const memeSchema = new mongoose.Schema({
 //==========================
 // 📃 Caption Schema 
 //=========================
-const captionSchema = new mongoose.Schema(
-  {
-    meme: {
-      type: String, 
-      required: true,
-    },
-    username: {
-      type: String,
-      required: true,
-    },
-    caption: {
-      type: String,
-      required: true,
-      maxlength: 150,
-    },
-  },
-  { timestamps: true }
-);
+app.post('/api/captions', async (req, res) => {
+  try {
+    const { meme, memeId, username, caption, userId, profilePicture } = req.body;
 
-// module.exports = mongoose.model("Caption", captionSchema);
+    if (!meme || !username || !caption) {
+      return res.status(400).json({ message: 'Meme, username, and caption are required' });
+    }
+
+    // Prevent exact duplicate from same user
+    const exists = await Caption.exists({ username, meme, memeId, caption });
+    if (exists) {
+      return res.status(409).json({ message: 'Duplicate caption: You have already submitted this caption for this meme.' });
+    }
+
+    const newCaption = new Caption({
+      meme,
+      memeId,
+      userId: userId || undefined,
+      username,
+      profilePicture: profilePicture || undefined,
+      caption
+    });
+
+    await newCaption.save();
+    res.status(201).json({ message: 'Caption submitted successfully', caption: newCaption });
+
+  } catch (error) {
+    console.error('Caption Submission Error:', error);
+    res.status(500).json({ message: 'Error submitting caption' });
+  }
+});
 
 // Models
 const User = mongoose.model('User', userSchema);
@@ -481,25 +492,31 @@ app.get('/api/memes/latest', async (req, res) => {
 
 //=========================
 // 📸 Submit Caption Route
+
 app.post('/api/captions', async (req, res) => {
   try {
-    const { meme, memeId, username, caption } = req.body;
+    const { meme, memeId, username, caption, userId, profilePicture } = req.body;
 
     if (!meme || !username || !caption) {
       return res.status(400).json({ message: 'Meme, username, and caption are required' });
     }
 
-    // 🛑 Prevent duplicate caption submission
+    // Prevent exact duplicate from same user
     const exists = await Caption.exists({ username, meme, memeId, caption });
-
     if (exists) {
       return res.status(409).json({ message: 'Duplicate caption: You have already submitted this caption for this meme.' });
     }
 
-    // ✅ Save new caption
-    const newCaption = new Caption({ meme, memeId, username, caption });
-    await newCaption.save();
+    const newCaption = new Caption({
+      meme,
+      memeId,
+      userId: userId || undefined,
+      username,
+      profilePicture: profilePicture || undefined,
+      caption
+    });
 
+    await newCaption.save();
     res.status(201).json({ message: 'Caption submitted successfully', caption: newCaption });
 
   } catch (error) {
