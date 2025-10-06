@@ -161,7 +161,7 @@
     async function loadWinners() {
       const list = document.getElementById("winnerList");
       try {
-        const res = await fetch(`${API_BASE_URL}/api/winner/all`);
+        const res = await fetch(`${API_BASE_URL}/api/winners`);
         const winners = await res.json();
 
         if (!winners.length) {
