@@ -66,19 +66,6 @@
 
     /* Top bar fixed */
     .top-bar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 15px 20px;
-  background: rgba(0,0,0,0.3);
-  z-index: 800;
-}
-
-  /*  .top-bar {
       position: fixed;
       top: 0;
       left: 0;
@@ -89,7 +76,7 @@
       padding: 15px 20px;
       background: rgba(0,0,0,0.3);
       z-index: 800;
-    }*/
+    }
 
     .menu-btn {
       font-size: 28px;
@@ -99,7 +86,7 @@
       color: white;
     }
 
-        .logo-section {
+    .logo-section {
       text-align: center;
       margin-right: 25px;
     }
@@ -108,7 +95,7 @@
       width: 35px;
       height: 35px;
       border-radius: 50px;
-      }
+    }
 
     /* Main */
     .main {
@@ -155,7 +142,14 @@
       font-weight: bold;
       cursor: pointer;
       transition: transform 0.2s ease, background 0.3s ease;
+      user-select: none;
     }
+
+    .card:focus {
+      outline: 3px solid rgba(255,255,255,0.25);
+      outline-offset: 4px;
+    }
+
     .card:hover { transform: translateY(-5px); background: rgba(255, 255, 255, 0.2); }
 
     footer {
@@ -194,11 +188,12 @@
     </div>
 
     <div class="cards">
-      <div class="card">Contests</div>
-      <div class="card">Comments</div>
-      <div class="card">Winnings History</div>
-      <div class="card">Results</div>
-      <div class="card">Claims</div>
+      <!-- data-target attributes make redirecting explicit and easy to manage -->
+      <div class="card" data-target="meme.html" tabindex="0">Contests</div>
+      <div class="card" data-target="captions.html" tabindex="0">Comments</div>
+      <div class="card" data-target="winnings.html" tabindex="0">Winnings History</div>
+      <div class="card" data-target="results.html" tabindex="0">Results</div>
+      <div class="card" data-target="claims.html" tabindex="0">Claims</div>
     </div>
 
     <footer>
@@ -223,7 +218,7 @@
 
     document.getElementById("profilePic").src = profilePic;
     document.getElementById("welcomeNote").textContent =
-      `Welcome, ${ user.username || "Contestant"}`;
+      `Welcome, ${ user.fullName || user.username || "Contestant"}`;
   } else {
     window.location.href = "reward-login.html";
   }
@@ -241,16 +236,25 @@
     }
   }
 
-  // 🟢 Redirect when contest card is clicked
+  // Universal card click handler: use data-target attribute
   document.querySelectorAll('.card').forEach(card => {
+    // click
     card.addEventListener('click', () => {
-      const cardText = card.textContent.trim().toLowerCase();
-      if (cardText === 'contests') {
-        window.location.href = 'meme.html';
+      const target = card.dataset.target;
+      if (target) {
+        window.location.href = target;
+      }
+    });
+    // keyboard (Enter) support
+    card.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter' || ev.key === ' ') {
+        ev.preventDefault();
+        const target = card.dataset.target;
+        if (target) window.location.href = target;
       }
     });
   });
 </script>
 
 </body>
-  </html>
+        </html>
