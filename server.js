@@ -304,20 +304,25 @@ app.post('/api/users/login', async (req, res) => {
       return res.status(401).json({ message: 'Invalid password' });
     }
 
+    // ✅ Respond with all needed fields
     res.json({
-  message: 'Login successful',
-  user: {
-    id: user._id,
-    fullName: user.fullName,
-    username: user.username,
-    email: user.email,
-    phone: user.phone,
-    profilePicture: user.profilePicture, // ✅ include this
-    createdAt: user.createdAt
+      message: 'Login successful',
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        username: user.username,
+        email: user.email,
+        phone: user.phone,
+        profilePicture: user.profilePicture, // ✅ now included
+        createdAt: user.createdAt
+      }
+    });
+
+  } catch (err) {
+    console.error('Login Error:', err);
+    res.status(500).json({ message: 'Login failed' });
   }
 });
-
-    
 
 // ==========================
 // 👤 Get User by ID
