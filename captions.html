@@ -91,68 +91,73 @@
   </div>
 
   <script>
-    const memeContainer = document.getElementById('memeContainer');
-    const captionsFeed = document.getElementById('captionsFeed');
+  const memeContainer = document.getElementById('memeContainer');
+  const captionsFeed = document.getElementById('captionsFeed');
 
-    // Format "time ago"
-    function timeAgo(date) {
-      const seconds = Math.floor((new Date() - new Date(date)) / 1000);
-      const intervals = {
-        year: 31536000,
-        month: 2592000,
-        week: 604800,
-        day: 86400,
-        hour: 3600,
-        minute: 60,
-      };
-      for (let key in intervals) {
-        const value = Math.floor(seconds / intervals[key]);
-        if (value >= 1) return `${value}${key[0]} ago`;
-      }
-      return 'Just now';
+  function timeAgo(date) {
+    const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+    const intervals = {
+      year: 31536000,
+      month: 2592000,
+      week: 604800,
+      day: 86400,
+      hour: 3600,
+      minute: 60,
+    };
+    for (let key in intervals) {
+      const value = Math.floor(seconds / intervals[key]);
+      if (value >= 1) return `${value}${key[0]} ago`;
     }
+    return 'Just now';
+  }
 
-    // Fetch latest meme
-    async function fetchMeme() {
-      try {
-        const res = await fetch('https://contesto.onrender.com/api/memes/latest');
-        if (!res.ok) throw new Error('No meme found');
-        const meme = await res.json();
-        memeContainer.innerHTML = `<img src="${meme.url}" alt="Latest Meme">`;
-      } catch (err) {
-        memeContainer.innerHTML = `<p class="empty">No meme uploaded yet.</p>`;
-      }
+  async function fetchMeme() {
+    try {
+      const res = await fetch('https://contesto.onrender.com/api/memes/latest');
+      const meme = await res.json();
+      memeContainer.innerHTML = `
+        <img src="${meme.url || meme.image || meme.memeUrl}" alt="Latest Meme">
+      `;
+    } catch (err) {
+      console.error('Meme load error:', err);
+      memeContainer.innerHTML = `<p class="empty">No meme uploaded yet.</p>`;
     }
+  }
 
-    // Fetch all captions
-    async function fetchCaptions() {
-      try {
-        const res = await fetch('https://contesto.onrender.com/api/caption-check');
-        const captions = await res.json();
+  async function fetchCaptions() {
+    try {
+      const res = await fetch('https://contesto.onrender.com/api/caption-check');
+      const captions = await res.json();
 
-        if (!captions.length) {
-          captionsFeed.innerHTML = `<p class="empty">Be the first to caption this meme!</p>`;
-          return;
-        }
+      if (!captions.length) {
+        captionsFeed.innerHTML = `<p class="empty">Be the first to caption this meme!</p>`;
+        return;
+      }
 
-        captionsFeed.innerHTML = captions.map(c => `
+      captionsFeed.innerHTML = captions.map(c => {
+        // handle both direct and nested username/profilePicture
+        const username = c.username || c.user?.username || 'Unknown';
+        const profilePic = c.profilePicture || c.user?.profilePicture || `https://via.placeholder.com/100?text=${encodeURIComponent(username.charAt(0).toUpperCase())}`;
+
+        return `
           <div class="caption-card">
-            <img src="${c.profilePicture || 'https://via.placeholder.com/45'}" alt="User">
+            <img src="${profilePic}" alt="User">
             <div class="caption-content">
-              <div class="caption-username">${c.username}</div>
+              <div class="caption-username">${username}</div>
               <div class="caption-text">${c.caption}</div>
               <div class="caption-time">${timeAgo(c.createdAt)}</div>
             </div>
           </div>
-        `).join('');
-      } catch (err) {
-        console.error(err);
-        captionsFeed.innerHTML = `<p class="empty">Error loading captions.</p>`;
-      }
+        `;
+      }).join('');
+    } catch (err) {
+      console.error('Caption load error:', err);
+      captionsFeed.innerHTML = `<p class="empty">Error loading captions.</p>`;
     }
+  }
 
-    fetchMeme();
-    fetchCaptions();
+  fetchMeme();
+  fetchCaptions();
   </script>
 </body>
 </html>
