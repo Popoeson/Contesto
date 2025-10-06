@@ -239,6 +239,16 @@
       window.location.href = "register.html";
     }
   }
+
+  // 🟢 Redirect when contest card is clicked
+  document.querySelectorAll('.card').forEach(card => {
+    card.addEventListener('click', () => {
+      const cardText = card.textContent.trim().toLowerCase();
+      if (cardText === 'contests') {
+        window.location.href = 'meme.html';
+      }
+    });
+  });
 </script>
 
 </body>
