@@ -153,7 +153,7 @@ header a:hover {
     const API_BASE_URL = "https://contesto.onrender.com";
     const socket = io(API_BASE_URL);
 
-    const loggedInUser = JSON.parse(localStorage.getItem("user"));
+    let loggedInUser = JSON.parse(localStorage.getItem("user"));
     const claimWinnerId = localStorage.getItem("claimWinnerId");
     const messagesDiv = document.getElementById("messages");
     const input = document.getElementById("chatInput");
@@ -161,6 +161,11 @@ header a:hover {
     if (!loggedInUser) {
       alert("Please log in to chat.");
       window.location.href = "login.html";
+    }
+
+    // ✅ Normalize ID field (use id if _id is missing)
+    if (loggedInUser && !loggedInUser._id && loggedInUser.id) {
+      loggedInUser._id = loggedInUser.id;
     }
 
     // ✅ Unique room per user
@@ -183,7 +188,7 @@ header a:hover {
         const data = await res.json();
 
         messagesDiv.innerHTML = "";
-        if (data.length === 0) {
+        if (!data || data.length === 0) {
           // 👋 Auto greeting messages if no chat history
           appendMessage("admin", `🎉 Congratulations ${loggedInUser.username} on winning the contest!`);
           appendMessage("admin", `How would you like to claim your reward — Airtime 📞 or Data 📶?`);
@@ -204,9 +209,17 @@ header a:hover {
       appendMessage("user", text);
       input.value = "";
 
+      console.log("📤 Sending chat message:", {
+        senderId: loggedInUser._id,
+        senderRole: "user",
+        receiverId: "admin",
+        message: text,
+        room
+      });
+
       // Save to backend
       try {
-        await fetch(`${API_BASE_URL}/api/chat/send`, {
+        const res = await fetch(`${API_BASE_URL}/api/chat/send`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -217,6 +230,13 @@ header a:hover {
             room
           })
         });
+
+        if (!res.ok) {
+          const errData = await res.json();
+          console.error("❌ Message send failed:", errData);
+          return;
+        }
+
         socket.emit("sendMessage", { room, sender: loggedInUser.username, text });
 
         // 🤖 Auto response for claim choice
@@ -241,4 +261,4 @@ header a:hover {
     loadMessages();
   </script>
 </body>
-  </html>
+</html>
