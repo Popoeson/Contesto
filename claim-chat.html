@@ -8,7 +8,6 @@
 /* =============================
    🌟 Contesto Claim Chat Styles
    ============================= */
-
 body {
   margin: 0;
   font-family: 'Poppins', sans-serif;
@@ -20,7 +19,6 @@ body {
   overflow: hidden;
 }
 
-/* Header */
 header {
   background: rgba(0,0,50,0.6);
   padding: 15px;
@@ -50,9 +48,7 @@ header a:hover {
   background: rgba(0,0,80,0.8);
 }
 
-/* =============================
-   💬 Messages Area
-   ============================= */
+/* Messages area */
 .messages {
   flex: 1;
   overflow-y: auto;
@@ -61,15 +57,12 @@ header a:hover {
   gap: 10px;
   padding: 15px;
   scrollbar-width: thin;
-  margin-bottom: 70px; /* space for input bar */
-
-  /* ✨ Glassy translucent background */
+  margin-bottom: 70px;
   background: rgba(0, 0, 50, 0.35);
   backdrop-filter: blur(8px);
   border-top: 1px solid rgba(255,255,255,0.05);
   border-bottom: 1px solid rgba(255,255,255,0.1);
   box-shadow: inset 0 0 15px rgba(0,0,0,0.2);
-  /*border-radius: 12px 12px 0 0;*/
 }
 
 .message {
@@ -94,9 +87,7 @@ header a:hover {
   border-bottom-left-radius: 0;
 }
 
-/* ===============================
-   📱 Fixed Input Bar (WhatsApp Style)
-   =============================== */
+/* Input area */
 .input-area {
   position: fixed;
   left: 0;
@@ -138,20 +129,6 @@ header a:hover {
   background-color: #ffd700;
 }
 
-/* Responsive tweaks for smaller screens */
-@media (max-width: 500px) {
-  .input-area input {
-    padding: 10px;
-    font-size: 14px;
-  }
-
-  .input-area button {
-    padding: 10px 14px;
-    font-size: 14px;
-  }
-}
-
-/* Smooth message fade-in */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(5px); }
   to { opacity: 1; transform: translateY(0); }
@@ -164,69 +141,104 @@ header a:hover {
     Reward Claim Chat 💬
   </header>
 
-  <!-- Messages area -->
-  <div id="messages" class="messages">
-    <div class="message admin">
-      👋 Hi there! Congratulations on winning! Please provide your details to claim your reward.
-    </div>
-  </div>
+  <div id="messages" class="messages"></div>
 
-  <!-- Fixed Input Area -->
   <div class="input-area">
     <input type="text" id="chatInput" placeholder="Type your message..." />
     <button onclick="sendMessage()">Send</button>
   </div>
 
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   <script>
+    const API_BASE_URL = "https://contesto.onrender.com";
+    const socket = io(API_BASE_URL);
+
     const loggedInUser = JSON.parse(localStorage.getItem("user"));
     const claimWinnerId = localStorage.getItem("claimWinnerId");
     const messagesDiv = document.getElementById("messages");
     const input = document.getElementById("chatInput");
 
+    if (!loggedInUser) {
+      alert("Please log in to chat.");
+      window.location.href = "login.html";
+    }
+
+    // ✅ Unique room per user
+    const room = `user_${loggedInUser._id}`;
+    socket.emit("joinRoom", room);
+
+    // Append message to UI
     function appendMessage(sender, text) {
       const msg = document.createElement("div");
       msg.classList.add("message", sender);
-      msg.innerHTML = text;
+      msg.textContent = text;
       messagesDiv.appendChild(msg);
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
 
-    function sendMessage() {
+    // Load previous messages
+    async function loadMessages() {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/chat/messages/${room}`);
+        const data = await res.json();
+
+        messagesDiv.innerHTML = "";
+        if (data.length === 0) {
+          // 👋 Auto greeting messages if no chat history
+          appendMessage("admin", `🎉 Congratulations ${loggedInUser.username} on winning the contest!`);
+          appendMessage("admin", `How would you like to claim your reward — Airtime 📞 or Data 📶?`);
+        } else {
+          data.forEach(msg => {
+            appendMessage(msg.senderRole === "user" ? "user" : "admin", msg.message);
+          });
+        }
+      } catch (err) {
+        console.error("❌ Error loading messages:", err);
+      }
+    }
+
+    // Send message
+    async function sendMessage() {
       const text = input.value.trim();
       if (!text) return;
       appendMessage("user", text);
       input.value = "";
-      setTimeout(() => {
-        appendMessage("admin", "✅ Got it! The admin will verify your win and reach out shortly.");
-      }, 1500);
+
+      // Save to backend
+      try {
+        await fetch(`${API_BASE_URL}/api/chat/send`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            senderId: loggedInUser._id,
+            senderRole: "user",
+            receiverId: "admin",
+            message: text,
+            room
+          })
+        });
+        socket.emit("sendMessage", { room, sender: loggedInUser.username, text });
+
+        // 🤖 Auto response for claim choice
+        if (/airtime/i.test(text) || /data/i.test(text)) {
+          setTimeout(() => {
+            appendMessage("admin", "✅ Thank you, your message has been received. An admin will reply to you shortly.");
+          }, 1500);
+        }
+      } catch (err) {
+        console.error("❌ Error sending message:", err);
+      }
     }
 
-    if (loggedInUser && claimWinnerId) {
-      appendMessage("admin", `🏆 Welcome ${loggedInUser.username}! Let's confirm your reward claim for winner ID: ${claimWinnerId}.`);
-      appendMessage("admin", `How would you like to claim your reward. Airtime 📞 or Data 📶?`);
-    
-    }
-
-    // ====== Fix for Mobile Keyboard (Dynamic Viewport Height)
-    const inputArea = document.querySelector('.input-area');
-    const messages = document.getElementById('messages');
-
-    // Adjust chat height when keyboard opens
-    window.visualViewport.addEventListener('resize', () => {
-      const vh = window.visualViewport.height;
-      const fullHeight = window.innerHeight;
-      const keyboardHeight = fullHeight - vh;
-      
-      if (keyboardHeight > 100) {
-        // Keyboard is open
-        inputArea.style.bottom = keyboardHeight + 'px';
-        messages.style.paddingBottom = (keyboardHeight + 70) + 'px';
-      } else {
-        // Keyboard closed
-        inputArea.style.bottom = '0px';
-        messages.style.paddingBottom = '70px';
+    // Receive message from admin in real-time
+    socket.on("receiveMessage", ({ sender, text }) => {
+      if (sender !== loggedInUser.username) {
+        appendMessage("admin", text);
       }
     });
+
+    // Initialize chat
+    loadMessages();
   </script>
 </body>
   </html>
