@@ -221,28 +221,31 @@ header a:hover {
     scrollToBottom();  
   }  
 
-  async function loadMessages() {  
-    try {  
-      const res = await fetch(`${API_BASE_URL}/api/chat/messages/${room}`);  
-      const data = await res.json();  
-      messagesDiv.innerHTML = "";  
+async function loadMessages() {  
+  try {  
+    const res = await fetch(`${API_BASE_URL}/api/chat/messages/${room}`);  
+    const data = await res.json();  
+    messagesDiv.innerHTML = "";  
 
-      if (!data || data.length === 0) {  
-        appendMessage("admin", `🎉 Congratulations ${loggedInUser.username} on winning the contest!`);  
-        appendMessage("admin", `How would you like to claim your reward — Airtime 📞 or Data 📶?`);  
-      } else {  
-        data.forEach(msg => {
-  appendMessage(
-    msg.senderRole === "user" ? "user" : "admin",
-    msg.message,
-    msg.replyTo // ✅ show reply if exists
-  );
-});
-      scrollToBottom();  
-    } catch (err) {  
-      console.error("❌ Error loading messages:", err);  
-    }  
+    if (!data || data.length === 0) {  
+      appendMessage("admin", `🎉 Congratulations ${loggedInUser.username} on winning the contest!`);  
+      appendMessage("admin", `How would you like to claim your reward — Airtime 📞 or Data 📶?`);  
+    } else {  
+      data.forEach(msg => {
+        appendMessage(
+          msg.senderRole === "user" ? "user" : "admin",
+          msg.message,
+          msg.replyTo // ✅ show reply if exists
+        );
+      });
+    }
+
+    scrollToBottom();  
+
+  } catch (err) {  
+    console.error("❌ Error loading messages:", err);  
   }  
+  }
 
   async function sendMessage() {  
     const text = input.value.trim();  
