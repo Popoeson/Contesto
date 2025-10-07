@@ -174,7 +174,7 @@ header a:hover {
   // ✅ Fetch chat history
   async function loadChatHistory() {
     try {
-      const res = await fetch(`https://contesto.onrender.com/api/chat/messages/${room}`);
+      const res = await fetch(`https://contesto.onrender.com/api/chat/send/${room}`);
       const data = await res.json();
 
       // Match the backend field names
