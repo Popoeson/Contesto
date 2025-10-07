@@ -37,7 +37,7 @@
     }
 
     .chat-item {
-      padding: 15px;
+      padding: 12px 15px;
       border-bottom: 1px solid rgba(255,255,255,0.2);
       display: flex;
       justify-content: space-between;
@@ -47,7 +47,21 @@
     }
 
     .chat-item:hover {
-      background: rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.25);
+    }
+
+    .chat-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .profile-pic {
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: rgba(255,255,255,0.3);
     }
 
     .user-info {
@@ -56,19 +70,23 @@
     }
 
     .user-name {
-      font-weight: bold;
-      font-size: 16px;
+      font-weight: 600;
+      font-size: 15px;
     }
 
     .last-message {
       font-size: 13px;
       opacity: 0.8;
-      margin-top: 4px;
+      margin-top: 3px;
+      max-width: 220px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .status {
       font-size: 12px;
-      opacity: 0.9;
+      opacity: 0.85;
     }
 
     .loading {
@@ -79,8 +97,9 @@
     }
 
     @media (max-width: 480px) {
-      .chat-item {
-        padding: 12px;
+      .profile-pic {
+        width: 40px;
+        height: 40px;
       }
       .user-name {
         font-size: 14px;
@@ -98,60 +117,83 @@
   <div id="loading" class="loading">Loading chats...</div>
 
   <script>
-  const chatListDiv = document.getElementById("chatList");
-  const loadingDiv = document.getElementById("loading");
+    const chatListDiv = document.getElementById("chatList");
+    const loadingDiv = document.getElementById("loading");
 
-  async function loadChats() {
-    try {
-      // ✅ Use the correct backend route
-      const res = await fetch("https://contesto.onrender.com/api/chat/admin/chat-users");
-      if (!res.ok) throw new Error("Failed to fetch users");
-      const users = await res.json();
+    function formatTime(dateString) {
+      const now = new Date();
+      const date = new Date(dateString);
+      const diff = (now - date) / 1000; // seconds
 
-      loadingDiv.style.display = "none";
+      if (diff < 60) return "Just now";
+      if (diff < 3600) return Math.floor(diff / 60) + " min ago";
+      if (diff < 86400) return Math.floor(diff / 3600) + " hr ago";
+      if (diff < 172800) return "Yesterday";
 
-      if (!users || users.length === 0) {
-        chatListDiv.innerHTML = `<p style="text-align:center;padding:20px;">No active chats yet</p>`;
-        return;
+      // within the same week
+      const daysDiff = Math.floor(diff / 86400);
+      if (daysDiff < 7) {
+        return date.toLocaleDateString("en-US", { weekday: "short" });
       }
 
-      // ✅ Clear previous list
-      chatListDiv.innerHTML = "";
-
-      users.forEach(u => {
-        // The backend aggregation returns:
-        // _id (userId), lastMessage, room, lastActive
-        const div = document.createElement("div");
-        div.className = "chat-item";
-        div.innerHTML = `
-          <div class="user-info">
-            <span class="user-name">User ID: ${u._id}</span>
-            <span class="last-message">${u.lastMessage || "No messages yet"}</span>
-          </div>
-          <div>
-            <span class="status">🕒 ${new Date(u.lastActive).toLocaleString()}</span>
-          </div>
-        `;
-
-        // ✅ When clicked, open the chat page
-        div.onclick = () => {
-          const params = new URLSearchParams({
-            userId: u._id,
-            room: u.room
-          });
-          window.location.href = `admin-chat.html?${params.toString()}`;
-        };
-
-        chatListDiv.appendChild(div);
-      });
-
-    } catch (err) {
-      console.error(err);
-      loadingDiv.textContent = "Failed to load chat list. Please try again.";
+      return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
     }
-  }
 
-  loadChats();
-</script>
+    async function loadChats() {
+      try {
+        const res = await fetch("https://contesto.onrender.com/api/chat/admin/chat-users");
+        if (!res.ok) throw new Error("Failed to fetch users");
+        const users = await res.json();
+
+        loadingDiv.style.display = "none";
+        chatListDiv.innerHTML = "";
+
+        if (!users || users.length === 0) {
+          chatListDiv.innerHTML = `<p style="text-align:center;padding:20px;">No active chats yet</p>`;
+          return;
+        }
+
+        for (const u of users) {
+          // Fetch user details to display name & profile picture
+          let userData = null;
+          try {
+            const resUser = await fetch(`https://contesto.onrender.com/api/users/${u._id}`);
+            if (resUser.ok) userData = await resUser.json();
+          } catch (e) {
+            console.warn("Couldn't fetch user profile:", e);
+          }
+
+          const username = userData?.username || "Unknown User";
+          const photo = userData?.profilePicture || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+
+          const div = document.createElement("div");
+          div.className = "chat-item";
+          div.innerHTML = `
+            <div class="chat-left">
+              <img src="${photo}" alt="Profile" class="profile-pic">
+              <div class="user-info">
+                <span class="user-name">${username}</span>
+                <span class="last-message">${u.lastMessage || "No messages yet"}</span>
+              </div>
+            </div>
+            <div class="status">🕒 ${formatTime(u.lastActive)}</div>
+          `;
+
+          div.onclick = () => {
+            const params = new URLSearchParams({ userId: u._id, room: u.room });
+            window.location.href = `admin-chat.html?${params.toString()}`;
+          };
+
+          chatListDiv.appendChild(div);
+        }
+
+      } catch (err) {
+        console.error(err);
+        loadingDiv.textContent = "Failed to load chat list. Please try again.";
+      }
+    }
+
+    loadChats();
+  </script>
 </body>
 </html>
