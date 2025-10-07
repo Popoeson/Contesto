@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Contestant Homepage</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to bottom right, #0044cc, #00c2ff);
+      color: white;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: -300px;
+      width: 250px;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      backdrop-filter: blur(6px);
+      padding: 20px;
+      box-shadow: 2px 0 8px rgba(0,0,0,0.4);
+      transition: left 0.3s ease-in-out;
+      display: flex;
+      flex-direction: column;
+      z-index: 1000;
+    }
+
+    .sidebar.active { left: 0; }
+
+    .sidebar button {
+      background: #ff4444;
+      border: none;
+      color: white;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .sidebar button.settings {
+      background: #ffaa00;
+    }
+
+    .sidebar button:hover { opacity: 0.85; }
+
+    /* Overlay */
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.4);
+      display: none;
+      z-index: 900;
+    }
+    .overlay.active { display: block; }
+
+    /* Top bar fixed */
+    .top-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px 20px;
+      background: rgba(0,0,0,0.3);
+      z-index: 800;
+    }
+
+    .menu-btn {
+      font-size: 28px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      color: white;
+    }
+
+    .logo-section {
+      text-align: center;
+      margin-right: 25px;
+    }
+
+    .logo {
+      width: 35px;
+      height: 35px;
+      border-radius: 50px;
+    }
+
+    /* Main */
+    .main {
+      flex: 1;
+      padding: 100px 20px 30px; /* add top padding because header is fixed */
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .header img {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border: 3px solid #fff000;
+      object-fit: cover;
+    }
+
+    .header h2 {
+      margin: 0;
+      font-size: 22px;
+      color: #fff000;
+    }
+
+    /* Cards */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+    @media (min-width: 768px) { .cards { grid-template-columns: repeat(3, 1fr); } }
+    @media (min-width: 1024px) { .cards { grid-template-columns: repeat(4, 1fr); } }
+
+    .card {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 30px 20px;
+      border-radius: 16px;
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s ease, background 0.3s ease;
+      user-select: none;
+    }
+
+    .card:focus {
+      outline: 3px solid rgba(255,255,255,0.25);
+      outline-offset: 4px;
+    }
+
+    .card:hover { transform: translateY(-5px); background: rgba(255, 255, 255, 0.2); }
+
+    footer {
+      text-align: center;
+      margin-top: 30px;
+      font-size: 14px;
+      color: #eee;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <button onclick="logout()">🚪 Sign Out</button>
+    <button onclick="deleteAccount()">🗑 Delete Account</button>
+    <button class="settings">⚙ Settings</button>
+  </div>
+
+  <!-- Overlay -->
+  <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+  <!-- Top bar -->
+  <div class="top-bar">
+    <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+    <div class="logo-section">
+      <img src="uploads/logo.png" alt="Site Logo" class="logo">
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="header">
+      <img id="profilePic" src="images/default-avatar.png" alt="Profile Picture">
+      <h2 id="welcomeNote">Welcome, Admin</h2>
+    </div>
+
+    <div class="cards">
+      <!-- data-target attributes make redirecting explicit and easy to manage -->
+      <div class="card" data-target="admin-dashboard.html" tabindex="0">View Members</div>
+      <div class="card" data-target="admin-upload.html" tabindex="0">Post Meme</div>
+      <div class="card" data-target="meme-dashboard.html" tabindex="0">Meme's History</div>
+      <div class="card" data-target="check-caption.html" tabindex="0">Pick Winner</div>
+      <div class="card" data-target="winners.html" tabindex="0">Winners History</div>
+      <div class="card" data-target="admin-chat.html" tabindex="0">Chats</div>
+    </div>
+
+    <footer>
+      &copy; 2025 Contesto. All rights reserved.
+    </footer>
+  </div>
+
+<script>
+  function toggleSidebar() {
+    document.getElementById("sidebar").classList.toggle("active");
+    document.getElementById("overlay").classList.toggle("active");
+  }
+
+  // Load user from localStorage
+  const user = JSON.parse(localStorage.getItem("user"));
+
+  if (user) {
+    let profilePath = user.profilePicture || user.profilePic || "";
+    let profilePic = profilePath
+      ? (profilePath.startsWith("http") ? profilePath : `https://contesto.onrender.com${profilePath}`)
+      : "images/default-avatar.png";
+
+    document.getElementById("profilePic").src = profilePic;
+    document.getElementById("welcomeNote").textContent =
+      `Welcome, ${ user.fullName || user.username || "Contestant"}`;
+  } else {
+    window.location.href = "reward-login.html";
+  }
+
+  function logout() {
+    localStorage.removeItem("user");
+    window.location.href = "reward-login.html";
+  }
+
+  function deleteAccount() {
+    if (confirm("Are you sure you want to delete your account?")) {
+      localStorage.removeItem("user");
+      alert("Your account has been deleted.");
+      window.location.href = "register.html";
+    }
+  }
+
+  // Universal card click handler: use data-target attribute
+  document.querySelectorAll('.card').forEach(card => {
+    // click
+    card.addEventListener('click', () => {
+      const target = card.dataset.target;
+      if (target) {
+        window.location.href = target;
+      }
+    });
+    // keyboard (Enter) support
+    card.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter' || ev.key === ' ') {
+        ev.preventDefault();
+        const target = card.dataset.target;
+        if (target) window.location.href = target;
+      }
+    });
+  });
+</script>
+
+</body>
+        </html>
