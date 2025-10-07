@@ -231,10 +231,13 @@ header a:hover {
         appendMessage("admin", `🎉 Congratulations ${loggedInUser.username} on winning the contest!`);  
         appendMessage("admin", `How would you like to claim your reward — Airtime 📞 or Data 📶?`);  
       } else {  
-        data.forEach(msg => {  
-          appendMessage(msg.senderRole === "user" ? "user" : "admin", msg.message);  
-        });  
-      }  
+        data.forEach(msg => {
+  appendMessage(
+    msg.senderRole === "user" ? "user" : "admin",
+    msg.message,
+    msg.replyTo // ✅ show reply if exists
+  );
+});
       scrollToBottom();  
     } catch (err) {  
       console.error("❌ Error loading messages:", err);  
