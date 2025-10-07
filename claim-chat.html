@@ -148,117 +148,127 @@ header a:hover {
     <button onclick="sendMessage()">Send</button>
   </div>
 
-  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-  <script>
-    const API_BASE_URL = "https://contesto.onrender.com";
-    const socket = io(API_BASE_URL);
+  
 
-    let loggedInUser = JSON.parse(localStorage.getItem("user"));
-    const claimWinnerId = localStorage.getItem("claimWinnerId");
-    const messagesDiv = document.getElementById("messages");
-    const input = document.getElementById("chatInput");
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script>
+  const API_BASE_URL = "https://contesto.onrender.com";
+  const socket = io(API_BASE_URL, {
+    transports: ["websocket"],
+    reconnection: true
+  });
 
-    if (!loggedInUser) {
-      alert("Please log in to chat.");
-      window.location.href = "login.html";
-    }
+  let loggedInUser = JSON.parse(localStorage.getItem("user"));
+  const messagesDiv = document.getElementById("messages");
+  const input = document.getElementById("chatInput");
 
-    // ✅ Normalize ID field (use id if _id is missing)
-    if (loggedInUser && !loggedInUser._id && loggedInUser.id) {
-      loggedInUser._id = loggedInUser.id;
-    }
+  // 🔒 Ensure user is logged in
+  if (!loggedInUser) {
+    alert("Please log in to chat.");
+    window.location.href = "login.html";
+  }
 
-    // ✅ Unique room per user
-    const room = `user_${loggedInUser._id}`;
-    socket.emit("joinRoom", room);
+  // 🧩 Normalize ID (handles id/_id inconsistency)
+  if (loggedInUser && !loggedInUser._id && loggedInUser.id) {
+    loggedInUser._id = loggedInUser.id;
+  }
 
-    // Append message to UI
-    function appendMessage(sender, text) {
-      const msg = document.createElement("div");
-      msg.classList.add("message", sender);
-      msg.textContent = text;
-      messagesDiv.appendChild(msg);
-      messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    }
+  // 🏠 Define unique room for this user
+  const room = `user_${loggedInUser._id}`;
+  socket.emit("joinRoom", room);
 
-    // Load previous messages
-    async function loadMessages() {
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/chat/messages/${room}`);
-        const data = await res.json();
+  // 🗨️ Append message to UI
+  function appendMessage(sender, text) {
+    const msg = document.createElement("div");
+    msg.classList.add("message", sender);
+    msg.textContent = text;
+    messagesDiv.appendChild(msg);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  }
 
-        messagesDiv.innerHTML = "";
-        if (!data || data.length === 0) {
-          // 👋 Auto greeting messages if no chat history
-          appendMessage("admin", `🎉 Congratulations ${loggedInUser.username} on winning the contest!`);
-          appendMessage("admin", `How would you like to claim your reward — Airtime 📞 or Data 📶?`);
-        } else {
-          data.forEach(msg => {
-            appendMessage(msg.senderRole === "user" ? "user" : "admin", msg.message);
-          });
-        }
-      } catch (err) {
-        console.error("❌ Error loading messages:", err);
+  // 📜 Load previous messages
+  async function loadMessages() {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/chat/messages/${room}`);
+      const data = await res.json();
+
+      messagesDiv.innerHTML = "";
+
+      if (!data || data.length === 0) {
+        // 👋 Greeting for first-time chat
+        appendMessage("admin", `🎉 Congratulations ${loggedInUser.username} on winning the contest!`);
+        appendMessage("admin", `How would you like to claim your reward — Airtime 📞 or Data 📶?`);
+      } else {
+        data.forEach(msg => {
+          appendMessage(msg.senderRole === "user" ? "user" : "admin", msg.message);
+        });
       }
+    } catch (err) {
+      console.error("❌ Error loading messages:", err);
     }
+  }
 
-    // Send message
-    async function sendMessage() {
-      const text = input.value.trim();
-      if (!text) return;
-      appendMessage("user", text);
-      input.value = "";
+  // 📤 Send message
+  async function sendMessage() {
+    const text = input.value.trim();
+    if (!text) return;
 
-      console.log("📤 Sending chat message:", {
-        senderId: loggedInUser._id,
-        senderRole: "user",
-        receiverId: "admin",
-        message: text,
-        room
+    appendMessage("user", text);
+    input.value = "";
+
+    const payload = {
+      senderId: loggedInUser._id,
+      senderRole: "user",
+      receiverId: "admin",
+      message: text,
+      room
+    };
+
+    console.log("📤 Sending message:", payload);
+
+    // Save to backend
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/chat/send`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
       });
 
-      // Save to backend
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/chat/send`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            senderId: loggedInUser._id,
-            senderRole: "user",
-            receiverId: "admin",
-            message: text,
-            room
-          })
-        });
-
-        if (!res.ok) {
-          const errData = await res.json();
-          console.error("❌ Message send failed:", errData);
-          return;
-        }
-
-        socket.emit("sendMessage", { room, sender: loggedInUser.username, text });
-
-        // 🤖 Auto response for claim choice
-        if (/airtime/i.test(text) || /data/i.test(text)) {
-          setTimeout(() => {
-            appendMessage("admin", "✅ Thank you, your message has been received. An admin will reply to you shortly.");
-          }, 1500);
-        }
-      } catch (err) {
-        console.error("❌ Error sending message:", err);
+      if (!res.ok) {
+        const errData = await res.json();
+        console.error("❌ Message send failed:", errData);
+        return;
       }
+
+      // Emit real-time socket event
+      socket.emit("sendMessage", { room, senderRole: "user", message: text });
+
+      // 🤖 Auto acknowledgment
+      if (/airtime/i.test(text) || /data/i.test(text)) {
+        setTimeout(() => {
+          appendMessage("admin", "✅ Thank you! An admin will reply to you shortly.");
+        }, 1500);
+      }
+    } catch (err) {
+      console.error("❌ Error sending message:", err);
     }
+  }
 
-    // Receive message from admin in real-time
-    socket.on("receiveMessage", ({ sender, text }) => {
-      if (sender !== loggedInUser.username) {
-        appendMessage("admin", text);
-      }
-    });
+  // 🖱️ Send message on button click or Enter key
+  input.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") sendMessage();
+  });
 
-    // Initialize chat
-    loadMessages();
-  </script>
+  // 💬 Receive message in real-time from admin
+  socket.on("receiveMessage", ({ senderRole, message }) => {
+    if (senderRole !== "user") {
+      appendMessage("admin", message);
+    }
+  });
+
+  // 🚀 Initialize chat
+  loadMessages();
+</script>
+  
 </body>
 </html>
