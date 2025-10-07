@@ -749,16 +749,16 @@ const io = new Server(server, {
 io.on("connection", (socket) => {
   console.log("⚡ New client connected:", socket.id);
 
-  // Join a room (e.g., per userId)
+  // Join room
   socket.on("joinRoom", (room) => {
     socket.join(room);
-    console.log(`📱 User joined room: ${room}`);
+    console.log(`📱 Joined room: ${room}`);
   });
 
-  // Handle message send
-  socket.on("sendMessage", async ({ room, sender, text }) => {
-    console.log(`💬 Message from ${sender} in ${room}: ${text}`);
-    io.to(room).emit("receiveMessage", { sender, text });
+  // Unified message handler
+  socket.on("sendMessage", ({ room, senderRole, message }) => {
+    console.log(`💬 ${senderRole} sent: ${message}`);
+    io.to(room).emit("receiveMessage", { senderRole, message });
   });
 
   socket.on("disconnect", () => {
