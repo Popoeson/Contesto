@@ -174,7 +174,7 @@ header a:hover {
   // ✅ Fetch chat history
   async function loadChatHistory() {
     try {
-      const res = await fetch(`https://contesto.onrender.com/api/chat/send/${room}`);
+      const res = await fetch(`https://contesto.onrender.com/api/chat/messaages/${room}`);
       const data = await res.json();
 
       // Match the backend field names
@@ -212,7 +212,7 @@ header a:hover {
     socket.emit("sendMessage", { room, senderRole: "admin", message: text, receiverId: userId });
 
     // Save to DB
-    fetch("https://contesto.onrender.com/api/chat/message", {
+    fetch("https://contesto.onrender.com/api/chat/send", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
