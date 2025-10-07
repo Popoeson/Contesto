@@ -118,9 +118,7 @@ const winnerSchema = new mongoose.Schema({
   pickedAt: { type: Date, default: Date.now }
 });
 
-//======================
-// 🗨️ Message Schema
-//======================
+// 🗨️ Updated Message Schema
 const messageSchema = new mongoose.Schema(
   {
     senderId: { type: String, required: true },
@@ -128,6 +126,7 @@ const messageSchema = new mongoose.Schema(
     receiverId: { type: String, required: true },
     message: { type: String, required: true },
     room: { type: String, required: true },
+    replyTo: { type: String, default: null }, // ✅ New field
   },
   { timestamps: true }
 );
@@ -623,12 +622,12 @@ app.get('/api/winners', async (req, res) => {
 // 💬 Chat: Save a new message
 app.post("/api/chat/send", async (req, res) => {
   try {
-    const { senderId, senderRole, receiverId, message, room } = req.body;
+    const { senderId, senderRole, receiverId, message, room, replyTo } = req.body;
     if (!senderId || !senderRole || !receiverId || !message || !room) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    const newMessage = new Message({ senderId, senderRole, receiverId, message, room });
+    const newMessage = new Message({ senderId, senderRole, receiverId, message, room, replyTo });
     await newMessage.save();
 
     res.status(201).json({ message: "Message sent successfully" });
