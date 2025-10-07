@@ -125,6 +125,46 @@ header a:hover {
   background-color: #ffd700;  
 }  
 
+    /* Reply preview box */
+.reply-preview {
+  position: fixed;
+  bottom: 60px;
+  left: 0;
+  width: 100%;
+  background: rgba(0, 0, 80, 0.7);
+  color: #fff;
+  padding: 8px 12px;
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  border-left: 4px solid gold;
+  font-size: 14px;
+  z-index: 11;
+}
+
+.reply-preview span {
+  opacity: 0.9;
+}
+
+.reply-preview button {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+/* Quoted reply bubble */
+.reply-box {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 6px 8px;
+  border-left: 3px solid gold;
+  border-radius: 6px;
+  margin-bottom: 5px;
+  font-size: 13px;
+  opacity: 0.85;
+                   }
+    
 @keyframes fadeIn {  
   from { opacity: 0; transform: translateY(5px); }  
   to { opacity: 1; transform: translateY(0); }  
@@ -143,6 +183,11 @@ header a:hover {
     <input type="text" id="chatInput" placeholder="Type your message..." />  
     <button onclick="sendMessage()">Send</button>  
   </div>  
+
+  <div class="reply-preview" id="replyPreview">
+  <span id="replyText"></span>
+  <button onclick="cancelReply()">✖</button>
+  </div>
 
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>  
 <script>  
@@ -225,6 +270,88 @@ header a:hover {
     }  
   }  
 
+  let replyToMessage = null; // Store message being replied to
+
+// Detect swipe right on messages
+let startX;
+messagesDiv.addEventListener("touchstart", (e) => {
+  startX = e.touches[0].clientX;
+});
+
+messagesDiv.addEventListener("touchend", (e) => {
+  const endX = e.changedTouches[0].clientX;
+  if (endX - startX > 80) { // Swipe right threshold
+    const messageEl = e.target.closest(".message");
+    if (messageEl) triggerReply(messageEl);
+  }
+});
+
+// Show reply preview
+function triggerReply(messageEl) {
+  const text = messageEl.textContent.trim().substring(0, 50); // Limit preview length
+  replyToMessage = text;
+  document.getElementById("replyText").textContent = text;
+  document.getElementById("replyPreview").style.display = "flex";
+}
+
+// Cancel reply
+function cancelReply() {
+  replyToMessage = null;
+  document.getElementById("replyPreview").style.display = "none";
+}
+
+// Modify appendMessage to support replies
+function appendMessage(sender, text, replyTo = null) {
+  const msg = document.createElement("div");
+  msg.classList.add("message", sender);
+
+  if (replyTo) {
+    const replyBox = document.createElement("div");
+    replyBox.classList.add("reply-box");
+    replyBox.textContent = replyTo;
+    msg.appendChild(replyBox);
+  }
+
+  const mainText = document.createElement("div");
+  mainText.textContent = text;
+  msg.appendChild(mainText);
+
+  messagesDiv.appendChild(msg);
+  scrollToBottom();
+}
+
+// Modify sendMessage to include replyTo if present
+async function sendMessage() {
+  const text = input.value.trim();
+  if (!text) return;
+
+  appendMessage("user", text, replyToMessage);
+  input.value = "";
+  document.getElementById("replyPreview").style.display = "none";
+
+  const payload = {
+    senderId: loggedInUser._id,
+    senderRole: "user",
+    receiverId: "admin",
+    message: text,
+    replyTo: replyToMessage,
+    room
+  };
+
+  replyToMessage = null; // Reset reply after sending
+
+  try {
+    await fetch(`${API_BASE_URL}/api/chat/send`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    socket.emit("sendMessage", { room, senderRole: "user", message: text });
+  } catch (err) {
+    console.error("❌ Error sending message:", err);
+  }
+  }
+  
   input.addEventListener("keypress", (e) => { if (e.key === "Enter") sendMessage(); });  
   socket.on("receiveMessage", ({ senderRole, message }) => { if (senderRole !== "user") appendMessage("admin", message); });  
   loadMessages();  
