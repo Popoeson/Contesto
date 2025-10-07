@@ -218,7 +218,7 @@
 
     document.getElementById("profilePic").src = profilePic;
     document.getElementById("welcomeNote").textContent =
-      `Welcome, ${ user.fullName || user.username || "Contestant"}`;
+      `Welcome, ${ user.username || "Contestant"}`;
   } else {
     window.location.href = "reward-login.html";
   }
