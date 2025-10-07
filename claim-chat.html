@@ -299,12 +299,19 @@ messagesDiv.addEventListener("touchend", (e) => {
 
 // Show reply preview
 function triggerReply(messageEl) {
-  const text = messageEl.textContent.trim().substring(0, 50); // Limit preview length
+  messageEl.style.transition = "transform 0.2s ease, background 0.2s ease";
+  messageEl.style.transform = "translateX(25px)";
+  messageEl.style.background = "rgba(255,215,0,0.3)";
+  setTimeout(() => {
+    messageEl.style.transform = "";
+    messageEl.style.background = "";
+  }, 250);
+
+  const text = messageEl.textContent.trim().substring(0, 50);
   replyToMessage = text;
   document.getElementById("replyText").textContent = text;
   document.getElementById("replyPreview").style.display = "flex";
-}
-
+  }
 // Cancel reply
 function cancelReply() {
   replyToMessage = null;
