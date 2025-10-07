@@ -168,27 +168,30 @@ header a:hover {
     reconnection: true,
   });
 
-  // ✅ Join chat room
-  socket.emit("joinRoom", room);
+// ✅ Fetch chat history
+async function loadChatHistory() {
+  try {
+    const res = await fetch(`https://contesto.onrender.com/api/chat/messages/${room}`);
+    const data = await res.json();
 
-  // ✅ Fetch chat history
-  async function loadChatHistory() {
-    try {
-      const res = await fetch(`https://contesto.onrender.com/api/chat/messaages/${room}`);
-      const data = await res.json();
+    messagesDiv.innerHTML = "";
 
-      // Match the backend field names
-      data.forEach(msg => {
-        const senderClass = msg.senderRole === "admin" ? "admin" : "user";
-        appendMessage(senderClass, msg.message);
-      });
-    } catch (err) {
-      console.error("Failed to load chat history:", err);
+    if (!data || data.length === 0) {
+      appendMessage("system", "No messages yet from this user.");
+      return;
     }
+
+    data.forEach(msg => {
+      const senderClass = msg.senderRole === "admin" ? "admin" : "user";
+      appendMessage(senderClass, msg.message);
+    });
+  } catch (err) {
+    console.error("❌ Failed to load chat history:", err);
   }
+}
 
-  loadChatHistory();
-
+loadChatHistory();
+  
   // ✅ Append message to UI
   function appendMessage(senderClass, text) {
     const div = document.createElement("div");
