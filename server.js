@@ -118,17 +118,33 @@ const winnerSchema = new mongoose.Schema({
   pickedAt: { type: Date, default: Date.now }
 });
 
+//======================
+// 🗨️ Message Schema
+//======================
+const messageSchema = new mongoose.Schema(
+  {
+    senderId: { type: String, required: true },
+    senderRole: { type: String, enum: ["user", "admin"], required: true },
+    receiverId: { type: String, required: true },
+    message: { type: String, required: true },
+    room: { type: String, required: true },
+  },
+  { timestamps: true }
+);
+
 // Models
 const User = mongoose.model('User', userSchema);
 const Meme = mongoose.model('Meme', memeSchema);
 const Caption = mongoose.model("Caption", captionSchema);
 const Winner = mongoose.model("Winner", winnerSchema);
+const Message = mongoose.model("Message", messageSchema);
 // Export models together
 module.exports = {
   Caption,
   Meme,
   User,
-  Winner
+  Winner,
+  Message
 };
 // ==========================
 // 📤 Upload Meme Route
@@ -602,6 +618,57 @@ app.get('/api/winners', async (req, res) => {
   }
 });
 
+// 💬 Chat: Save a new message
+app.post("/api/chat/send", async (req, res) => {
+  try {
+    const { senderId, senderRole, receiverId, message, room } = req.body;
+    if (!senderId || !senderRole || !receiverId || !message || !room) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    const newMessage = new Message({ senderId, senderRole, receiverId, message, room });
+    await newMessage.save();
+
+    res.status(201).json({ message: "Message sent successfully" });
+  } catch (err) {
+    console.error("❌ Chat send error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// 💬 Chat: Get all messages in a specific room
+app.get("/api/chat/messages/:room", async (req, res) => {
+  try {
+    const { room } = req.params;
+    const messages = await Message.find({ room }).sort({ createdAt: 1 });
+    res.json(messages);
+  } catch (err) {
+    console.error("❌ Fetch messages error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// 💬 Chat: Get all users who have active chats (for admin chat list)
+app.get("/api/chat/admin/chat-users", async (req, res) => {
+  try {
+    const users = await Message.aggregate([
+      { $sort: { createdAt: -1 } },
+      {
+        $group: {
+          _id: "$receiverId",
+          lastMessage: { $first: "$message" },
+          room: { $first: "$room" },
+          lastActive: { $first: "$updatedAt" },
+        },
+      },
+    ]);
+
+    res.json(users);
+  } catch (err) {
+    console.error("❌ Fetch chat users error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 //==========================
 // 🚫 Error Handling 
 //===========================
@@ -622,3 +689,25 @@ app.get('/', (req, res) => {
 // ==========================
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server started on port ${PORT}`));
+
+const { Server } = require("socket.io");
+const io = new Server(server, {
+  cors: { origin: "*", methods: ["GET", "POST"] },
+});
+
+io.on("connection", (socket) => {
+  console.log("⚡ New client connected:", socket.id);
+
+  socket.on("joinRoom", (room) => {
+    socket.join(room);
+    console.log(`📱 Joined room: ${room}`);
+  });
+
+  socket.on("sendMessage", async ({ room, sender, text }) => {
+    io.to(room).emit("receiveMessage", { sender, text });
+  });
+
+  socket.on("disconnect", () => {
+    console.log("❌ Client disconnected:", socket.id);
+  });
+});
