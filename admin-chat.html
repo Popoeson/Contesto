@@ -151,48 +151,52 @@ header a:hover {
   </div>
 
   <!-- Socket.IO -->
-  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 <script>
+  const API_BASE_URL = "https://contesto.onrender.com";
   const messagesDiv = document.getElementById("messages");
   const input = document.getElementById("chatInput");
   const sendBtn = document.getElementById("sendBtn");
 
-  // ✅ Parse query params
+  // 🎯 Get query params
   const params = new URLSearchParams(window.location.search);
   const userId = params.get("userId");
-  const room = params.get("room") || `room_${userId}`;
+  const room = `user_${userId}`; // unified room naming
 
-  // ✅ Connect to backend
-  const socket = io("https://contesto.onrender.com", {
+  // 🧠 Connect to backend socket
+  const socket = io(API_BASE_URL, {
     transports: ["websocket"],
-    reconnection: true,
+    reconnection: true
   });
 
-// ✅ Fetch chat history
-async function loadChatHistory() {
-  try {
-    const res = await fetch(`https://contesto.onrender.com/api/chat/messages/${room}`);
-    const data = await res.json();
+  // 🔗 Join specific user room
+  socket.emit("joinRoom", room);
 
-    messagesDiv.innerHTML = "";
+  // 📜 Load previous messages
+  async function loadChatHistory() {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/chat/messages/${room}`);
+      const data = await res.json();
 
-    if (!data || data.length === 0) {
-      appendMessage("system", "No messages yet from this user.");
-      return;
+      messagesDiv.innerHTML = "";
+
+      if (!data || data.length === 0) {
+        appendMessage("system", "No messages yet from this user.");
+        return;
+      }
+
+      data.forEach(msg => {
+        const senderClass = msg.senderRole === "admin" ? "admin" : "user";
+        appendMessage(senderClass, msg.message);
+      });
+    } catch (err) {
+      console.error("❌ Failed to load chat history:", err);
     }
-
-    data.forEach(msg => {
-      const senderClass = msg.senderRole === "admin" ? "admin" : "user";
-      appendMessage(senderClass, msg.message);
-    });
-  } catch (err) {
-    console.error("❌ Failed to load chat history:", err);
   }
-}
 
-loadChatHistory();
-  
-  // ✅ Append message to UI
+  loadChatHistory();
+
+  // 💬 Append message to chat window
   function appendMessage(senderClass, text) {
     const div = document.createElement("div");
     div.classList.add("message", senderClass);
@@ -201,53 +205,66 @@ loadChatHistory();
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
   }
 
-  // ✅ Send message
+  // 📤 Send message
+  async function sendMessage() {
+    const text = input.value.trim();
+    if (!text) return;
+
+    // Add to UI immediately
+    appendMessage("admin", text);
+    input.value = "";
+
+    const payload = {
+      senderId: "admin", // optional: replace with actual admin ID if available
+      senderRole: "admin",
+      receiverId: userId,
+      message: text,
+      room
+    };
+
+    console.log("📤 Sending message:", payload);
+
+    try {
+      // Save to DB
+      const res = await fetch(`${API_BASE_URL}/api/chat/send`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        console.error("❌ Message not saved:", errData);
+      }
+
+      // Emit real-time update
+      socket.emit("sendMessage", { room, senderRole: "admin", message: text });
+    } catch (err) {
+      console.error("❌ Error sending message:", err);
+    }
+  }
+
+  // 🚀 Handle button click or Enter key
   sendBtn.addEventListener("click", sendMessage);
   input.addEventListener("keypress", (e) => {
     if (e.key === "Enter") sendMessage();
   });
 
-  function sendMessage() {
-    const text = input.value.trim();
-    if (!text) return;
-
-    // Emit message
-    socket.emit("sendMessage", { room, senderRole: "admin", message: text, receiverId: userId });
-
-    // Save to DB
-    fetch("https://contesto.onrender.com/api/chat/send", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        room,
-        senderId: "admin", // or your logged-in admin ID if stored
-        senderRole: "admin",
-        receiverId: userId,
-        message: text
-      }),
-    });
-
-    appendMessage("admin", text);
-    input.value = "";
-  }
-
-  // ✅ Receive message
+  // 💡 Receive messages from user in real time
   socket.on("receiveMessage", ({ senderRole, message }) => {
-    if (senderRole !== "admin") appendMessage("user", message);
+    if (senderRole === "user") {
+      appendMessage("user", message);
+    }
   });
 
-  // ✅ Adjust input on mobile
+  // 📱 Adjust input on mobile keyboards
   const inputArea = document.querySelector('.input-area');
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', () => {
-     const vh = window.visualViewport.height;
+      const vh = window.visualViewport.height;
       const fullHeight = window.innerHeight;
       const keyboardHeight = fullHeight - vh;
-      if (keyboardHeight > 100) {
-        inputArea.style.bottom = keyboardHeight + 'px';
-      } else {
-        inputArea.style.bottom = '0px';
-      }
+      inputArea.style.bottom = keyboardHeight > 100 ? `${keyboardHeight}px` : '0px';
     });
   }
 </script>
