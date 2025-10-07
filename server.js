@@ -341,7 +341,7 @@ app.post('/api/users/login', async (req, res) => {
 });
 
 // ==========================
-// 👤 Get User by ID
+// 👤 Get User by ID (with profile)
 // ==========================
 app.get('/api/users/:id', async (req, res) => {
   try {
@@ -354,10 +354,11 @@ app.get('/api/users/:id', async (req, res) => {
 
     res.json({
       id: user._id,
-      fullName: user.fullName,
-      username: user.username,
-      email: user.email,
-      phone: user.phone,
+      fullName: user.fullName || "N/A",
+      username: user.username || "Anonymous",
+      email: user.email || "N/A",
+      phone: user.phone || "N/A",
+      profilePicture: user.profilePicture || "https://cdn-icons-png.flaticon.com/512/149/149071.png",
       createdAt: user.createdAt
     });
   } catch (err) {
@@ -365,6 +366,7 @@ app.get('/api/users/:id', async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch user' });
   }
 });
+
 // 📋 Get All Users (Admin)
 app.get('/api/users', async (req, res) => {
   try {
