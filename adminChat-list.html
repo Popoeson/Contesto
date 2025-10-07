@@ -116,9 +116,16 @@
   <div id="chatList" class="chat-list"></div>
   <div id="loading" class="loading">Loading chats...</div>
 
+  <!-- ✅ Socket.IO -->
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
   <script>
     const chatListDiv = document.getElementById("chatList");
     const loadingDiv = document.getElementById("loading");
+    const API_BASE = "https://contesto.onrender.com";
+
+    // Local cache of users
+    const chatUsers = {};
 
     function formatTime(dateString) {
       const now = new Date();
@@ -130,18 +137,16 @@
       if (diff < 86400) return Math.floor(diff / 3600) + " hr ago";
       if (diff < 172800) return "Yesterday";
 
-      // within the same week
       const daysDiff = Math.floor(diff / 86400);
-      if (daysDiff < 7) {
-        return date.toLocaleDateString("en-US", { weekday: "short" });
-      }
+      if (daysDiff < 7) return date.toLocaleDateString("en-US", { weekday: "short" });
 
       return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
     }
 
+    // ✅ Load all chats initially
     async function loadChats() {
       try {
-        const res = await fetch("https://contesto.onrender.com/api/chat/admin/chat-users");
+        const res = await fetch(`${API_BASE}/api/chat/admin/chat-users`);
         if (!res.ok) throw new Error("Failed to fetch users");
         const users = await res.json();
 
@@ -154,46 +159,81 @@
         }
 
         for (const u of users) {
-          // Fetch user details to display name & profile picture
-          let userData = null;
-          try {
-            const resUser = await fetch(`https://contesto.onrender.com/api/users/${u._id}`);
-            if (resUser.ok) userData = await resUser.json();
-          } catch (e) {
-            console.warn("Couldn't fetch user profile:", e);
-          }
-
-          const username = userData?.username || "Unknown User";
-          const photo = userData?.profilePicture || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-
-          const div = document.createElement("div");
-          div.className = "chat-item";
-          div.innerHTML = `
-            <div class="chat-left">
-              <img src="${photo}" alt="Profile" class="profile-pic">
-              <div class="user-info">
-                <span class="user-name">${username}</span>
-                <span class="last-message">${u.lastMessage || "No messages yet"}</span>
-              </div>
-            </div>
-            <div class="status">🕒 ${formatTime(u.lastActive)}</div>
-          `;
-
-          div.onclick = () => {
-            const params = new URLSearchParams({ userId: u._id, room: u.room });
-            window.location.href = `admin-chat.html?${params.toString()}`;
-          };
-
-          chatListDiv.appendChild(div);
+          await renderUserItem(u);
         }
-
       } catch (err) {
         console.error(err);
         loadingDiv.textContent = "Failed to load chat list. Please try again.";
       }
     }
 
+    // ✅ Render or update user chat item
+    async function renderUserItem(u) {
+      if (!u || !u._id) return;
+      let existing = chatUsers[u._id];
+
+      // Fetch user info if not cached
+      let userData = existing?.userData;
+      if (!userData) {
+        try {
+          const resUser = await fetch(`${API_BASE}/api/users/${u._id}`);
+          if (resUser.ok) userData = await resUser.json();
+        } catch (e) {
+          console.warn("Couldn't fetch user profile:", e);
+        }
+      }
+
+      const username = userData?.username || "Unknown User";
+      const photo = userData?.profilePicture || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+
+      if (!existing) {
+        // Create new item
+        const div = document.createElement("div");
+        div.className = "chat-item";
+        div.id = `chat-${u._id}`;
+        div.innerHTML = `
+          <div class="chat-left">
+            <img src="${photo}" alt="Profile" class="profile-pic">
+            <div class="user-info">
+              <span class="user-name">${username}</span>
+              <span class="last-message">${u.lastMessage || "No messages yet"}</span>
+            </div>
+          </div>
+          <div class="status">🕒 ${formatTime(u.lastActive)}</div>
+        `;
+        div.onclick = () => {
+          const params = new URLSearchParams({ userId: u._id, room: u.room });
+          window.location.href = `admin-chat.html?${params.toString()}`;
+        };
+        chatListDiv.prepend(div); // put most recent at top
+
+        chatUsers[u._id] = { element: div, userData };
+      } else {
+        // Update existing
+        const div = existing.element;
+        div.querySelector(".last-message").textContent = u.lastMessage || "No messages yet";
+        div.querySelector(".status").textContent = `🕒 ${formatTime(u.lastActive)}`;
+        chatListDiv.prepend(div); // move to top
+      }
+    }
+
     loadChats();
+
+    // ✅ Real-time updates using Socket.IO
+    const socket = io(API_BASE, { transports: ["websocket"], reconnection: true });
+    socket.on("receiveMessage", async ({ senderRole, message }) => {
+      if (senderRole === "user") {
+        // Fetch that user’s info (if not cached)
+        try {
+          const res = await fetch(`${API_BASE}/api/chat/admin/chat-users`);
+          const updatedUsers = await res.json();
+          const latestUser = updatedUsers[0]; // assume sorted by recency
+          await renderUserItem(latestUser);
+        } catch (err) {
+          console.error("Error updating chat list in real-time:", err);
+        }
+      }
+    });
   </script>
 </body>
 </html>
