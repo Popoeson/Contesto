@@ -273,16 +273,27 @@ header a:hover {
   let replyToMessage = null; // Store message being replied to
 
 // Detect swipe right on messages
-let startX;
+let startX, startY;
 messagesDiv.addEventListener("touchstart", (e) => {
-  startX = e.touches[0].clientX;
+  const touch = e.touches[0];
+  startX = touch.clientX;
+  startY = touch.clientY;
 });
 
 messagesDiv.addEventListener("touchend", (e) => {
-  const endX = e.changedTouches[0].clientX;
-  if (endX - startX > 80) { // Swipe right threshold
-    const messageEl = e.target.closest(".message");
-    if (messageEl) triggerReply(messageEl);
+  const touch = e.changedTouches[0];
+  const deltaX = touch.clientX - startX;
+  const deltaY = Math.abs(touch.clientY - startY);
+
+  if (deltaX > 60 && deltaY < 50) { // horizontal right swipe
+    const allMessages = Array.from(document.querySelectorAll(".message"));
+    const closest = allMessages.reduce((nearest, msg) => {
+      const rect = msg.getBoundingClientRect();
+      const dist = Math.abs(rect.top - touch.clientY);
+      return dist < (nearest?.dist ?? Infinity) ? { msg, dist } : nearest;
+    }, null);
+
+    if (closest) triggerReply(closest.msg);
   }
 });
 
