@@ -653,22 +653,68 @@ app.get("/api/chat/messages/:room", async (req, res) => {
 // 💬 Chat: Get all users who have active chats (for admin chat list)
 app.get("/api/chat/admin/chat-users", async (req, res) => {
   try {
-    const users = await Message.aggregate([
-      { $sort: { createdAt: -1 } },
+    const Message = mongoose.model("Message");
+    const User = mongoose.model("User");
+
+    const chats = await Message.aggregate([
+      {
+        $match: { senderRole: "user" }
+      },
+      {
+        $sort: { createdAt: -1 }
+      },
       {
         $group: {
-          _id: "$receiverId",
+          _id: "$senderId",
           lastMessage: { $first: "$message" },
-          room: { $first: "$room" },
-          lastActive: { $first: "$updatedAt" },
-        },
+          lastActive: { $first: "$createdAt" },
+          room: { $first: "$room" }
+        }
       },
+      // 🧠 Convert senderId (string) to ObjectId for lookup
+      {
+        $addFields: {
+          senderObjectId: {
+            $convert: {
+              input: "$_id",
+              to: "objectId",
+              onError: null,
+              onNull: null
+            }
+          }
+        }
+      },
+      {
+        $lookup: {
+          from: User.collection.name, // ✅ dynamically get actual collection name
+          localField: "senderObjectId",
+          foreignField: "_id",
+          as: "user"
+        }
+      },
+      { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          _id: 1,
+          username: { $ifNull: ["$user.username", "Unknown User"] },
+          profilePicture: {
+            $ifNull: [
+              "$user.profilePicture",
+              "https://cdn-icons-png.flaticon.com/512/149/149071.png"
+            ]
+          },
+          lastMessage: 1,
+          lastActive: 1,
+          room: 1
+        }
+      },
+      { $sort: { lastActive: -1 } }
     ]);
 
-    res.json(users);
+    res.json(chats);
   } catch (err) {
-    console.error("❌ Fetch chat users error:", err);
-    res.status(500).json({ message: "Server error" });
+    console.error("Fetch Admin Chat Users Error:", err);
+    res.status(500).json({ message: err.message || "Failed to fetch chat users" });
   }
 });
 //==========================
