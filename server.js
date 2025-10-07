@@ -685,25 +685,31 @@ app.get('/', (req, res) => {
 });
 
 // ==========================
-// 🚀 Start Server
+// 🚀 Start Server with Socket.io
 // ==========================
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server started on port ${PORT}`));
-
+const http = require("http");
 const { Server } = require("socket.io");
+
+// Create HTTP server from your existing Express app
+const server = http.createServer(app);
+
 const io = new Server(server, {
   cors: { origin: "*", methods: ["GET", "POST"] },
 });
 
+// 🟢 Handle socket connections
 io.on("connection", (socket) => {
   console.log("⚡ New client connected:", socket.id);
 
+  // Join a room (e.g., per userId)
   socket.on("joinRoom", (room) => {
     socket.join(room);
-    console.log(`📱 Joined room: ${room}`);
+    console.log(`📱 User joined room: ${room}`);
   });
 
+  // Handle message send
   socket.on("sendMessage", async ({ room, sender, text }) => {
+    console.log(`💬 Message from ${sender} in ${room}: ${text}`);
     io.to(room).emit("receiveMessage", { sender, text });
   });
 
@@ -711,3 +717,7 @@ io.on("connection", (socket) => {
     console.log("❌ Client disconnected:", socket.id);
   });
 });
+
+// ✅ Start your combined HTTP + WebSocket server
+const PORT = process.env.PORT || 5000;
+server.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
