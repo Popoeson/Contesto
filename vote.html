@@ -2,182 +2,302 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <title>🗳️ Vote Captions - Contesto</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🗳️ Meme Voting - Contesto</title>
   <style>
     body {
-      font-family: 'Poppins', sans-serif;
-      background: linear-gradient(135deg, #121212, #1f1f1f);
-      color: #fff;
       margin: 0;
-      padding: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, royalblue, cyan);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 15px;
+      min-height: 100vh;
+      box-sizing: border-box;
     }
 
-    .container {
+    header {
+      display: flex;
+      align-items: center;
+      width: 100%;
       max-width: 700px;
-      margin: 40px auto;
-      background: #181818;
-      padding: 20px;
-      border-radius: 16px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.4);
-    }
-
-    h2 {
-      text-align: center;
       margin-bottom: 20px;
-      color: #00ff99;
     }
 
-    .meme-image {
+    header a {
+      text-decoration: none;
+      color: #fff;
+      font-size: 24px;
+      background-color: rgba(0, 0, 50, 0.5);
+      padding: 8px 12px;
+      border-radius: 10px;
+      transition: background 0.3s;
+    }
+
+    header a:hover {
+      background-color: rgba(0, 0, 80, 0.8);
+    }
+
+    header h1 {
+      flex: 1;
+      text-align: center;
+      font-size: 20px;
+      margin: 0;
+      color: #fff;
+    }
+
+    .feed {
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+      width: 100%;
+      max-width: 700px;
+    }
+
+    .meme-card {
+      background-color: rgba(0, 0, 50, 0.7);
+      border-radius: 12px;
+      padding: 10px;
+      box-shadow: 0 0 10px #000;
+    }
+
+    .meme-card img {
       width: 100%;
       border-radius: 10px;
-      margin-bottom: 20px;
+      border: 2px solid #fff;
+      object-fit: contain;
+      max-height: 350px;
     }
 
-    .caption {
+    .caption-list {
+      margin-top: 10px;
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: #222;
-      padding: 10px 15px;
-      border-radius: 10px;
-      margin-bottom: 10px;
-      transition: 0.2s;
-    }
-
-    .caption:hover {
-      background: #333;
-      transform: scale(1.02);
-    }
-
-    .caption-info {
-      display: flex;
-      align-items: center;
+      flex-direction: column;
       gap: 10px;
     }
 
-    .caption-info img {
-      width: 40px;
-      height: 40px;
+    .caption-card {
+      background-color: rgba(0, 0, 50, 0.6);
+      border-radius: 12px;
+      padding: 10px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      box-shadow: 0 0 6px #000;
+    }
+
+    .caption-card img {
+      width: 45px;
+      height: 45px;
       border-radius: 50%;
       object-fit: cover;
+      border: 2px solid #fff;
     }
 
-    .vote-radio {
-      accent-color: #00ff99;
-      transform: scale(1.3);
-      cursor: pointer;
+    .caption-info {
+      flex: 1;
     }
 
-    button {
-      width: 100%;
-      padding: 12px;
-      background: #00ff99;
-      color: black;
-      font-weight: 600;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      font-size: 1rem;
-      margin-top: 20px;
-      transition: 0.3s;
+    .caption-info h3 {
+      margin: 0;
+      font-size: 15px;
+      color: #ffcc00;
     }
 
-    button:hover {
-      background: #00e68a;
+    .caption-info p {
+      margin: 5px 0;
+      font-size: 14px;
+      word-break: break-word;
     }
 
-    .disabled {
-      background: gray !important;
-      cursor: not-allowed;
+    .caption-info small {
+      font-size: 12px;
+      color: #ccc;
     }
 
+    .time {
+      font-size: 12px;
+      color: #ccc;
+      margin-top: 3px;
+    }
+
+    .empty {
+      text-align: center;
+      color: #eee;
+      font-style: italic;
+    }
+
+    /* ✅ Popup alert box */
+    .popup {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: rgba(0, 0, 0, 0.8);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      display: none;
+      z-index: 1000;
+      animation: fadeInOut 3s ease;
+    }
+
+    @keyframes fadeInOut {
+      0% { opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    @media (max-width: 500px) {
+      header h1 {
+        font-size: 18px;
+      }
+      .caption-card img {
+        width: 40px;
+        height: 40px;
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h2>Vote Your Favorite Caption 🗳️</h2>
-    <div id="meme-section"></div>
-    <div id="captions-section"></div>
-    <button id="submitVoteBtn">Submit Vote</button>
+  <header>
+    <a href="contestants-home.html">🏠</a>
+    <h1>🗳️ Vote Captions</h1>
+  </header>
+
+  <div class="feed" id="feedContainer">
+    <p class="empty">Loading active votes...</p>
   </div>
 
+  <div class="popup" id="popup"></div>
+
   <script>
-    const memeSection = document.getElementById('meme-section');
-    const captionsSection = document.getElementById('captions-section');
-    const submitVoteBtn = document.getElementById('submitVoteBtn');
+    const API_BASE_URL = "https://contesto.onrender.com";
+    const user = JSON.parse(localStorage.getItem("contestUser"));
+    if (!user) {
+      alert("You must be logged in to vote.");
+      window.location.href = "login.html";
+    }
 
-    const user = JSON.parse(localStorage.getItem('user')); // { username, _id }
-    const selectedMemeId = localStorage.getItem('activeMemeId'); // set when admin starts vote
-    const apiBase = "https://contesto.onrender.com"; // adjust to your backend URL
+    const voterId = user?._id;
+    const voterName = user?.username;
 
-    let selectedCaptionId = null;
+    function showPopup(message) {
+      const popup = document.getElementById("popup");
+      popup.textContent = message;
+      popup.style.display = "block";
+      setTimeout(() => popup.style.display = "none", 3000);
+    }
 
-    async function loadVotingData() {
+    function timeAgo(date) {
+      const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+      const intervals = { year: 31536000, month: 2592000, week: 604800, day: 86400, hour: 3600, minute: 60 };
+      for (let key in intervals) {
+        const value = Math.floor(seconds / intervals[key]);
+        if (value >= 1) return `${value}${key[0]} ago`;
+      }
+      return "Just now";
+    }
+
+    async function loadFeed() {
+      const container = document.getElementById("feedContainer");
+
       try {
-        const res = await fetch(`${apiBase}/api/vote/meme/${selectedMemeId}`);
-        const data = await res.json();
+        const memeRes = await fetch(`${API_BASE_URL}/api/memes`);
+        const memes = await memeRes.json();
 
-        memeSection.innerHTML = `<img src="${data.meme.imageUrl}" class="meme-image">`;
+        // ✅ Only memes with active voting
+        const activeMemes = memes.filter(m => m.isVotingActive);
+        if (!activeMemes.length) {
+          container.innerHTML = `<p class="empty">No active voting sessions.</p>`;
+          return;
+        }
 
-        captionsSection.innerHTML = data.captions.map(c => `
-          <div class="caption">
-            <div class="caption-info">
-              <img src="${c.profilePicture || 'https://via.placeholder.com/100?text=User'}">
-              <div>
-                <strong>${c.username}</strong><br>
-                <span>${c.caption}</span>
+        // Sort newest first
+        activeMemes.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        const capRes = await fetch(`${API_BASE_URL}/api/caption-check`);
+        const captions = await capRes.json();
+        container.innerHTML = "";
+
+        for (const meme of activeMemes) {
+          const memeCaptions = captions.filter(c => c.memeId === meme._id);
+          const captionHTML = memeCaptions.length
+            ? memeCaptions.map(c => {
+                const username = c.username || "Unknown";
+                const profilePic = c.profilePicture || `https://via.placeholder.com/100?text=${encodeURIComponent(username[0] || 'U')}`;
+                const captionText = c.caption || "";
+                const time = c.createdAt ? timeAgo(c.createdAt) : "";
+                const isSelf = c.username === voterName;
+
+                return `
+                  <div class="caption-card">
+                    <img src="${profilePic}" alt="user">
+                    <div class="caption-info">
+                      <h3>${username}</h3>
+                      <p>${captionText}</p>
+                      ${isSelf
+                        ? `<small>(You can’t vote for your own caption)</small>`
+                        : `<label><input type="radio" name="vote_${meme._id}" value="${c._id}" data-meme="${meme._id}" style="margin-right:5px;"> Vote</label>`
+                      }
+                      <div class="time">${time}</div>
+                    </div>
+                  </div>
+                `;
+              }).join("")
+            : `<p class="empty">No captions yet.</p>`;
+
+          container.insertAdjacentHTML(
+            "afterbegin",
+            `
+            <div class="meme-card">
+              <img src="${meme.imageUrl}" alt="Meme">
+              <div class="caption-list">
+                ${captionHTML}
               </div>
             </div>
-            ${
-              c.username === user?.username
-                ? '' // hide radio button for self captions
-                : `<input type="radio" name="vote" class="vote-radio" value="${c._id}">`
-            }
-          </div>
-        `).join('');
+            `
+          );
+        }
 
-        document.querySelectorAll('.vote-radio').forEach(radio => {
-          radio.addEventListener('change', (e) => {
-            selectedCaptionId = e.target.value;
+        // ✅ Add listeners to all radio buttons
+        document.querySelectorAll("input[type='radio']").forEach(radio => {
+          radio.addEventListener("change", async (e) => {
+            const captionId = e.target.value;
+            const memeId = e.target.dataset.meme;
+
+            try {
+              const res = await fetch(`${API_BASE_URL}/api/vote`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ voterId, voterName, memeId, captionId })
+              });
+
+              const data = await res.json();
+              if (res.ok) {
+                showPopup("✅ Vote received!");
+              } else {
+                showPopup(`⚠️ ${data.message}`);
+                e.target.checked = false;
+              }
+            } catch (err) {
+              console.error("Vote Error:", err);
+              showPopup("❌ Error submitting vote");
+              e.target.checked = false;
+            }
           });
         });
-
       } catch (err) {
         console.error(err);
+        container.innerHTML = `<p class="empty">Failed to load voting feed.</p>`;
       }
     }
 
-    submitVoteBtn.addEventListener('click', async () => {
-      if (!selectedCaptionId) return alert('Please select a caption to vote.');
-
-      try {
-        const res = await fetch(`${apiBase}/api/vote`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            voterId: user._id,
-            voterName: user.username,
-            captionId: selectedCaptionId,
-            memeId: selectedMemeId
-          })
-        });
-
-        const data = await res.json();
-        if (res.ok) {
-          alert('✅ Vote submitted successfully!');
-          submitVoteBtn.classList.add('disabled');
-          submitVoteBtn.disabled = true;
-        } else {
-          alert(`⚠️ ${data.message}`);
-        }
-      } catch (err) {
-        console.error(err);
-        alert("❌ Failed to submit vote");
-      }
-    });
-
-    loadVotingData();
+    loadFeed();
   </script>
 </body>
-</html>
+  </html>
