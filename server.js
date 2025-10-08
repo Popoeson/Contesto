@@ -105,12 +105,12 @@ const captionSchema = new mongoose.Schema({
 //=================
 // Vote Schema
 //==================
-const voteSchema= new mongoose.Schema({
+const voteSchema = new mongoose.Schema({
   voterId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   voterName: String,
   memeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Meme' },
   captionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Caption' },
-}, { timestamps: true }));
+}, { timestamps: true });
 
 //=========================
 // 🎉 Winner Schema
@@ -139,16 +139,17 @@ const messageSchema = new mongoose.Schema(
 // Models
 const User = mongoose.model('User', userSchema);
 const Meme = mongoose.model('Meme', memeSchema);
-const Caption = mongoose.model("Caption", captionSchema);
-const Vote = mongoose.model("Vote", voteSchema);
-const Winner = mongoose.model("Winner", winnerSchema);
-const Message = mongoose.model("Message", messageSchema);
+const Caption = mongoose.model('Caption', captionSchema);
+const Vote = mongoose.model('Vote', voteSchema);
+const Winner = mongoose.model('Winner', winnerSchema);
+const Message = mongoose.model('Message', messageSchema);
+
 // Export models together
 module.exports = {
+  User,
+  Meme,
   Caption,
   Vote,
-  Meme,
-  User,
   Winner,
   Message
 };
