@@ -148,99 +148,129 @@
   </div>
 
   <script>
-    const apiBase = "https://contesto.onrender.com/api/memes";
+  const apiBase = "https://contesto.onrender.com/api/memes";
 
-    async function fetchMemes() {
-      try {
-        const res = await fetch(apiBase);
-        const memes = await res.json();
-        const tbody = document.querySelector("#memeTable tbody");
-        tbody.innerHTML = "";
+  async function fetchMemes() {
+    try {
+      const res = await fetch(apiBase);
+      const memes = await res.json();
+      const tbody = document.querySelector("#memeTable tbody");
+      tbody.innerHTML = "";
 
-        memes.forEach(meme => {
-          const isVotingActive = meme.isVotingActive || false;
-          const isArchived = meme.isArchived || false;
-          const date = new Date(meme.createdAt || meme.uploadedAt).toLocaleString();
+      // Show newest memes first
+      memes.reverse().forEach(meme => {
+        const isVotingActive = meme.isVotingActive || false;
+        const isArchived = meme.isArchived || false;
+        const date = new Date(meme.createdAt || meme.uploadedAt).toLocaleString();
 
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td><img src="${meme.imageUrl}" alt="meme" /></td>
-            <td>${meme.captionCount || 0}</td>
-            <td>${date}</td>
-            <td>
-              <span class="status-dot ${isVotingActive ? 'on' : 'off'}"></span>
-              <button class="btn vote-btn ${isVotingActive ? 'end' : 'start'}"
-                onclick="toggleVote(this, '${meme._id}', ${isVotingActive})">
-                ${isVotingActive ? 'End Vote' : 'Start Vote'}
-              </button>
-            </td>
-            <td>
-              <span class="status-dot ${isArchived ? 'on' : 'off'}"></span>
-              <button class="btn archive-btn ${isArchived ? 'archived' : 'archive'}"
-                onclick="toggleArchive(this, '${meme._id}', ${isArchived})">
-                ${isArchived ? 'Archived' : 'Archive'}
-              </button>
-            </td>
-            <td>
-              <button class="btn delete-btn" onclick="deleteMeme('${meme._id}')">Delete</button>
-            </td>
-          `;
-          tbody.appendChild(row);
-        });
-      } catch (err) {
-        console.error("Failed to load memes:", err);
-      }
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td><img src="${meme.imageUrl}" alt="meme" /></td>
+          <td>${meme.captionCount || 0}</td>
+          <td>${date}</td>
+          <td>
+            <span class="status-dot ${isVotingActive ? 'on' : 'off'}"></span>
+            <button class="btn vote-btn ${isVotingActive ? 'end' : 'start'}"
+              onclick="toggleVote(this, '${meme._id}', ${isVotingActive})">
+              ${isVotingActive ? 'End Vote' : 'Start Bite'}
+            </button>
+          </td>
+          <td>
+            <span class="status-dot ${isArchived ? 'on' : 'off'}"></span>
+            <button class="btn archive-btn ${isArchived ? 'archived' : 'archive'}"
+              onclick="toggleArchive(this, '${meme._id}', ${isArchived})">
+              ${isArchived ? 'Archived' : 'Archive'}
+            </button>
+          </td>
+          <td>
+            <button class="btn delete-btn" onclick="deleteMeme('${meme._id}')">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    } catch (err) {
+      console.error("Failed to load memes:", err);
     }
+  }
 
-    // ✅ Toggle vote state instantly
-    async function toggleVote(button, id, currentState) {
-      const isStarting = !currentState;
-      button.textContent = isStarting ? "End Vote" : "Start Vote";
-      button.classList.toggle("end", isStarting);
-      button.classList.toggle("start", !isStarting);
+  // ✅ Toggle vote state with proper feedback
+  async function toggleVote(button, id, currentState) {
+    const isStarting = !currentState;
+    const action = isStarting ? "Starting..." : "Ending...";
+    const successMsg = isStarting
+      ? "✅ Vote session started successfully!"
+      : "✅ Vote session ended successfully!";
+    button.disabled = true;
+    button.textContent = action;
 
-      try {
-        const res = await fetch(`${apiBase}/${id}/vote`, { method: "PATCH" });
-        const data = await res.json();
-        console.log(data.message);
+    try {
+      const res = await fetch(`${apiBase}/${id}/vote`, { method: "PATCH" });
+      const data = await res.json();
+
+      if (res.ok) {
+        alert(successMsg);
         fetchMemes();
-      } catch (err) {
-        console.error("Error toggling vote:", err);
+      } else {
+        alert("⚠️ Failed to toggle vote session.");
+        console.error(data);
       }
+    } catch (err) {
+      console.error("Error toggling vote:", err);
+      alert("❌ Network error while toggling vote session.");
+    } finally {
+      button.disabled = false;
     }
+  }
 
-    // ✅ Toggle archive state instantly
-    async function toggleArchive(button, id, currentState) {
-      const isArchiving = !currentState;
-      button.textContent = isArchiving ? "Archived" : "Archive";
-      button.classList.toggle("archived", isArchiving);
-      button.classList.toggle("archive", !isArchiving);
+  // ✅ Toggle archive state with proper feedback
+  async function toggleArchive(button, id, currentState) {
+    const isArchiving = !currentState;
+    const action = isArchiving ? "Archiving..." : "Unarchiving...";
+    const successMsg = isArchiving
+      ? "✅ Meme archived successfully!"
+      : "✅ Meme unarchived successfully!";
+    button.disabled = true;
+    button.textContent = action;
 
-      try {
-        const res = await fetch(`${apiBase}/${id}/archive`, { method: "PATCH" });
-        const data = await res.json();
-        console.log(data.message);
+    try {
+      const res = await fetch(`${apiBase}/${id}/archive`, { method: "PATCH" });
+      const data = await res.json();
+
+      if (res.ok) {
+        alert(successMsg);
         fetchMemes();
-      } catch (err) {
-        console.error("Error toggling archive:", err);
+      } else {
+        alert("⚠️ Failed to change archive status.");
+        console.error(data);
       }
+    } catch (err) {
+      console.error("Error toggling archive:", err);
+      alert("❌ Network error while toggling archive status.");
+    } finally {
+      button.disabled = false;
     }
+  }
 
-    async function deleteMeme(id) {
-      const confirmDelete = confirm("Are you sure you want to delete this meme?");
-      if (!confirmDelete) return;
-      try {
-        const res = await fetch(`${apiBase}/${id}`, { method: "DELETE" });
-        if (res.ok) {
-          alert("Meme deleted successfully!");
-          fetchMemes();
-        } else alert("Failed to delete meme.");
-      } catch (err) {
-        console.error("Error deleting meme:", err);
+  // ✅ Delete meme flow
+  async function deleteMeme(id) {
+    const confirmDelete = confirm("Are you sure you want to delete this meme?");
+    if (!confirmDelete) return;
+
+    try {
+      const res = await fetch(`${apiBase}/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        alert("🗑️ Meme deleted successfully!");
+        fetchMemes();
+      } else {
+        alert("❌ Failed to delete meme.");
       }
+    } catch (err) {
+      console.error("Error deleting meme:", err);
+      alert("⚠️ Network error while deleting meme.");
     }
+  }
 
-    fetchMemes();
+  fetchMemes();
   </script>
 </body>
     </html>
