@@ -4,108 +4,194 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Meme Dashboard</title>
-  <style>
+  
+    <style>
+  /* GLOBAL STYLES */
+  body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    color: white;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 40px 10px;
+  }
+
+  /* MAIN CONTAINER */
+  .container {
+    width: 100%;
+    max-width: 1200px;
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(8px);
+    border-radius: 20px;
+    padding: 25px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+    overflow-x: auto; /* ✅ allows scroll on smaller screens */
+  }
+
+  h2 {
+    text-align: center;
+    color: #fff;
+    font-size: 26px;
+    margin-bottom: 25px;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  /* TABLE WRAPPER FOR RESPONSIVENESS */
+  .table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  /* TABLE */
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 10px;
+    min-width: 900px; /* ✅ ensures full layout shows even on small screens */
+  }
+
+  th {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    font-weight: 600;
+    padding: 12px;
+    border-radius: 8px;
+    text-transform: uppercase;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+
+  td {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    text-align: center;
+    padding: 15px;
+    border-radius: 10px;
+    backdrop-filter: blur(6px);
+    font-size: 14px;
+    vertical-align: middle;
+  }
+
+  tr:hover td {
+    background: rgba(255, 255, 255, 0.18);
+    transition: background 0.3s ease;
+  }
+
+  /* IMAGES */
+  img {
+    width: 80px;
+    height: auto;
+    border-radius: 8px;
+    border: 2px solid #fff;
+    transition: transform 0.2s;
+  }
+
+  img:hover {
+    transform: scale(1.05);
+  }
+
+  /* BUTTONS */
+  .btn {
+    border: none;
+    padding: 8px 14px;
+    border-radius: 25px;
+    cursor: pointer;
+    color: #fff;
+    font-weight: 600;
+    transition: all 0.25s ease;
+    font-size: 13px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+    white-space: nowrap;
+  }
+
+  .btn:hover {
+    transform: translateY(-2px);
+    opacity: 0.95;
+  }
+
+  .vote-btn.start {
+    background: linear-gradient(135deg, #27ae60, #2ecc71);
+  }
+
+  .vote-btn.end {
+    background: linear-gradient(135deg, #e67e22, #d35400);
+  }
+
+  .archive-btn.archive {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+  }
+
+  .archive-btn.unarchive {
+    background: linear-gradient(135deg, #9b59b6, #8e44ad);
+  }
+
+  .delete-btn {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+  }
+
+  /* STATUS DOTS */
+  .status-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 5px;
+  }
+
+  .status-dot.on {
+    background-color: #2ecc71;
+  }
+
+  .status-dot.off {
+    background-color: #e74c3c;
+  }
+
+  /* RESPONSIVENESS */
+  @media (max-width: 768px) {
     body {
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(to right, #1f3b73, #29539b);
-      color: white;
-      min-height: 100vh;
+      padding: 20px 5px;
     }
 
     .container {
-      max-width: 1100px;
-      margin: 40px auto;
-      background: #fff;
-      border-radius: 16px;
-      padding: 20px;
-      color: #000;
-      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+      padding: 15px;
     }
 
     h2 {
-      text-align: center;
-      color: #1f3b73;
+      font-size: 22px;
     }
 
     table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
-
-    th, td {
-      padding: 12px 15px;
-      text-align: center;
-    }
-
-    th {
-      background-color: #1f3b73;
-      color: #fff;
-    }
-
-    tr:nth-child(even) {
-      background-color: #f0f4ff;
-    }
-
-    tr:hover {
-      background-color: #e0ecff;
+      font-size: 12px;
+      min-width: 700px;
     }
 
     img {
-      width: 80px;
-      height: auto;
-      border-radius: 8px;
+      width: 60px;
     }
 
-    button {
-      border: none;
-      padding: 6px 12px;
-      border-radius: 6px;
-      cursor: pointer;
-      color: #fff;
-      font-weight: 500;
-      transition: transform 0.2s, opacity 0.2s;
+    .btn {
+      font-size: 12px;
+      padding: 6px 10px;
     }
-
-    button:hover {
-      transform: scale(1.05);
-      opacity: 0.9;
-    }
-
-    .vote-btn.start {
-      background-color: #2ecc71;
-    }
-
-    .vote-btn.end {
-      background-color: #e67e22;
-    }
-
-    .archive-btn.archive {
-      background-color: #3498db;
-    }
-
-    .archive-btn.unarchive {
-      background-color: #9b59b6;
-    }
-
-    .delete-btn {
-      background-color: #e63946;
-    }
-
-    .delete-btn:hover {
-      background-color: #c7212c;
-    }
-  </style>
+  }
+</style>
 </head>
 <body>
   <div class="container">
-    <h2>Meme Dashboard</h2>
+    <h2>🏆 Meme Dashboard</h2>
     <table id="memeTable">
       <thead>
         <tr>
           <th>Preview</th>
-          <th>Caption Count</th>
+          <th>Captions</th>
           <th>Uploaded</th>
           <th>Vote</th>
           <th>Archive</th>
@@ -113,7 +199,7 @@
         </tr>
       </thead>
       <tbody>
-        <!-- Memes will be populated here -->
+        <tr><td colspan="6">Loading memes...</td></tr>
       </tbody>
     </table>
   </div>
@@ -121,7 +207,6 @@
   <script>
     const apiBase = "https://contesto.onrender.com/api/memes";
 
-    // ✅ Fetch all memes
     async function fetchMemes() {
       try {
         const res = await fetch(apiBase);
@@ -130,52 +215,40 @@
         tbody.innerHTML = "";
 
         memes.forEach(meme => {
-          const row = document.createElement("tr");
-
           const isVotingActive = meme.isVotingActive || false;
           const isArchived = meme.isArchived || false;
-
-          const imageCell = `<td><img src="${meme.imageUrl}" alt="meme" /></td>`;
-          const captionCell = `<td>${meme.captionCount || 0}</td>`;
           const date = new Date(meme.createdAt || meme.uploadedAt).toLocaleString();
-          const dateCell = `<td>${date}</td>`;
 
-          const voteButton = `
-            <button 
-              class="vote-btn ${isVotingActive ? 'end' : 'start'}" 
-              onclick="toggleVote('${meme._id}', ${isVotingActive})">
-              ${isVotingActive ? '🔴 End Vote' : '🟢 Start Vote'}
-            </button>
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td><img src="${meme.imageUrl}" alt="meme" /></td>
+            <td>${meme.captionCount || 0}</td>
+            <td>${date}</td>
+            <td>
+              <span class="status-dot ${isVotingActive ? 'on' : 'off'}"></span>
+              <button class="btn vote-btn ${isVotingActive ? 'end' : 'start'}"
+                onclick="toggleVote('${meme._id}', ${isVotingActive})">
+                ${isVotingActive ? 'End Vote' : 'Start Vote'}
+              </button>
+            </td>
+            <td>
+              <span class="status-dot ${isArchived ? 'on' : 'off'}"></span>
+              <button class="btn archive-btn ${isArchived ? 'unarchive' : 'archive'}"
+                onclick="toggleArchive('${meme._id}', ${isArchived})">
+                ${isArchived ? 'Unarchive' : 'Archive'}
+              </button>
+            </td>
+            <td>
+              <button class="btn delete-btn" onclick="deleteMeme('${meme._id}')">Delete</button>
+            </td>
           `;
-
-          const archiveButton = `
-            <button 
-              class="archive-btn ${isArchived ? 'unarchive' : 'archive'}"
-              onclick="toggleArchive('${meme._id}', ${isArchived})">
-              ${isArchived ? '♻️ Unarchive' : '📦 Archive'}
-            </button>
-          `;
-
-          const deleteButton = `
-            <button class="delete-btn" onclick="deleteMeme('${meme._id}')">
-              ❌ Delete
-            </button>
-          `;
-
-          row.innerHTML = imageCell + captionCell + dateCell +
-                          `<td>${voteButton}</td>` +
-                          `<td>${archiveButton}</td>` +
-                          `<td>${deleteButton}</td>`;
-
           tbody.appendChild(row);
         });
-
       } catch (err) {
         console.error("Failed to load memes:", err);
       }
     }
 
-    // ✅ Toggle vote start/end
     async function toggleVote(id, currentState) {
       try {
         const res = await fetch(`${apiBase}/${id}/vote`, { method: "PATCH" });
@@ -187,7 +260,6 @@
       }
     }
 
-    // ✅ Toggle archive/unarchive
     async function toggleArchive(id, currentState) {
       try {
         const res = await fetch(`${apiBase}/${id}/archive`, { method: "PATCH" });
@@ -199,7 +271,6 @@
       }
     }
 
-    // ✅ Delete meme
     async function deleteMeme(id) {
       const confirmDelete = confirm("Are you sure you want to delete this meme?");
       if (!confirmDelete) return;
@@ -217,7 +288,6 @@
       }
     }
 
-    // Initial load
     fetchMemes();
   </script>
 </body>
