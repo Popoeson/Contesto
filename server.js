@@ -105,7 +105,7 @@ const captionSchema = new mongoose.Schema({
 //=================
 // Vote Schema
 //==================
-const Vote = mongoose.model('Vote', new mongoose.Schema({
+const voteSchema= new mongoose.Schema({
   voterId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   voterName: String,
   memeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Meme' },
