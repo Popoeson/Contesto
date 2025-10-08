@@ -76,24 +76,19 @@ const userSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-// ==========================
-// 🖼️ Meme Schema
-// ==========================
 const memeSchema = new mongoose.Schema({
   caption: String,
-  memeId: {
-      type: mongoose.Schema.Types.ObjectId, // this is the link to the Meme collection
-      ref: 'Meme',
-      required: true,
-    },
   imageUrl: String,
   public_id: String,
-  uploadedAt: { type: Date, default: Date.now }
+  uploadedAt: { type: Date, default: Date.now },
+
+  // 🆕 New fields for control
+  isVotingActive: { type: Boolean, default: false },
+  isArchived: { type: Boolean, default: false },
+
+  // Optional: count of captions/comments
+  captionCount: { type: Number, default: 0 },
 });
-
-
-
-// module.exports = Meme;
 
 //==========================
 // 📃 Caption Schema 
