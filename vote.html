@@ -177,10 +177,10 @@
 
   <script>
     const API_BASE_URL = "https://contesto.onrender.com";
-    const user = JSON.parse(localStorage.getItem("contestUser"));
+    const user = JSON.parse(localStorage.getItem("user"));
     if (!user) {
       alert("You must be logged in to vote.");
-      window.location.href = "login.html";
+      window.location.href = "reward-login.html";
     }
 
     const voterId = user?._id;
