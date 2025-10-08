@@ -22,14 +22,16 @@
       border-radius: 12px;
       box-shadow: 0 0 15px #000;
       width: 90%;
-      max-width: 400px;
+      /* max-width: 500px; */
+      max-width: 300px;
       text-align: center;
     }
 
     img {
       width: 100%;
-      max-height: 220px; /* ✅ set max height for consistency */
-      object-fit: cover; /* neatly fits tall/long images */
+      /*max-height: 300px;*/
+      max-height: 250px;
+      object-fit: contain;
       border-radius: 10px;
       margin-bottom: 20px;
       border: 2px solid #fff;
@@ -41,7 +43,7 @@
       border-radius: 8px;
       border: none;
       resize: none;
-      font-size: 16px;
+      font-size: 20px;
       margin-bottom: 10px;
     }
 
@@ -66,12 +68,6 @@
       background-color: #e0b800;
     }
 
-    button:disabled {
-      background-color: gray;
-      color: #fff;
-      cursor: not-allowed;
-    }
-
     #spinner {
       display: none;
       margin-top: 15px;
@@ -88,39 +84,27 @@
       font-size: 14px;
       color: #ddd;
     }
-
-    #archiveNotice {
-      margin-top: 15px;
-      font-size: 14px;
-      color: #ff6666;
-      font-weight: bold;
-      display: none;
-    }
   </style>
 </head>
 <body>
-
   <div class="container">
     <h2>Caption This Meme</h2>
     <img src="uploads/today-meme.jpg" alt="Meme of the Day" id="memeImage">
-    
     <p class="char-limit">Max 150 characters</p>
     <textarea id="captionInput" rows="4" maxlength="150" placeholder="Enter your funniest caption..."></textarea>
 
     <button id="submitBtn">Submit Caption</button>
     <div id="spinner">Submitting...</div>
     <div id="successMsg"></div>
-
-    <div id="archiveNotice">🚫 This meme has been archived. Caption submissions are closed.</div>
-    <div id="timer">⏳ Result will be announced at 9:00 PM</div>
   </div>
 
   <script>
     const API_BASE_URL = "https://contesto.onrender.com";
 
-    // ✅ Load user info
+    // Read logged-in user (unified single key)
     const stored = localStorage.getItem('user');
     const user = stored ? JSON.parse(stored) : null;
+
     if (!user) {
       alert('You must be logged in.');
       window.location.href = 'reward-login.html';
@@ -131,16 +115,14 @@
     const captionInput = document.getElementById("captionInput");
     const successMsg = document.getElementById("successMsg");
     const memeImage = document.getElementById("memeImage");
-    const archiveNotice = document.getElementById("archiveNotice");
 
     let latestMemeId = null;
     let isArchived = false;
 
-    // ✅ Load the latest meme
     async function loadMeme() {
       try {
         const res = await fetch(`${API_BASE_URL}/api/memes/latest`);
-        if (!res.ok) throw new Error('No meme found.');
+        if (!res.ok) throw new Error('No meme');
         const meme = await res.json();
 
         if (meme && meme.imageUrl) {
@@ -148,10 +130,12 @@
           latestMemeId = meme._id || meme.id || null;
           isArchived = meme.isArchived || false;
 
+          // Disable captioning if archived
           if (isArchived) {
-            archiveNotice.style.display = "block";
-            submitBtn.disabled = true;
             captionInput.disabled = true;
+            submitBtn.disabled = true;
+            successMsg.style.color = "red";
+            successMsg.textContent = "🚫 This meme has been archived. Captioning is closed.";
           }
         }
       } catch (err) {
@@ -161,8 +145,12 @@
 
     loadMeme();
 
-    // ✅ Caption submission
     submitBtn.addEventListener('click', async () => {
+      if (isArchived) {
+        alert("This meme has been archived and cannot receive captions.");
+        return;
+      }
+
       const caption = captionInput.value.trim();
       const meme = memeImage.src;
 
@@ -189,7 +177,7 @@
           return;
         }
 
-        // Submit new caption
+        // Submit with user info
         const response = await fetch(`${API_BASE_URL}/api/captions`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -210,10 +198,10 @@
         if (response.ok) {
           successMsg.textContent = "✅ Caption submitted successfully!";
           captionInput.value = "";
-          // ✅ Redirect to captions page
+          // Redirect after 2 seconds
           setTimeout(() => {
             window.location.href = "captions.html";
-          }, 1500);
+          }, 2000);
         } else {
           alert(result.message || "Submission failed.");
         }
