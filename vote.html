@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🗳️ Meme Voting - Contesto</title>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #121212, #1f1f1f);
+      color: #fff;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: 40px auto;
+      background: #181818;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.4);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #00ff99;
+    }
+
+    .meme-image {
+      width: 100%;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+
+    .caption {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #222;
+      padding: 10px 15px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      transition: 0.2s;
+    }
+
+    .caption:hover {
+      background: #333;
+      transform: scale(1.02);
+    }
+
+    .caption-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .caption-info img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .vote-radio {
+      accent-color: #00ff99;
+      transform: scale(1.3);
+      cursor: pointer;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #00ff99;
+      color: black;
+      font-weight: 600;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1rem;
+      margin-top: 20px;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: #00e68a;
+    }
+
+    .disabled {
+      background: gray !important;
+      cursor: not-allowed;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Vote Your Favorite Caption 🗳️</h2>
+    <div id="meme-section"></div>
+    <div id="captions-section"></div>
+    <button id="submitVoteBtn">Submit Vote</button>
+  </div>
+
+  <script>
+    const memeSection = document.getElementById('meme-section');
+    const captionsSection = document.getElementById('captions-section');
+    const submitVoteBtn = document.getElementById('submitVoteBtn');
+
+    const user = JSON.parse(localStorage.getItem('user')); // { username, _id }
+    const selectedMemeId = localStorage.getItem('activeMemeId'); // set when admin starts vote
+    const apiBase = "https://contesto.onrender.com"; // adjust to your backend URL
+
+    let selectedCaptionId = null;
+
+    async function loadVotingData() {
+      try {
+        const res = await fetch(`${apiBase}/api/vote/meme/${selectedMemeId}`);
+        const data = await res.json();
+
+        memeSection.innerHTML = `<img src="${data.meme.imageUrl}" class="meme-image">`;
+
+        captionsSection.innerHTML = data.captions.map(c => `
+          <div class="caption">
+            <div class="caption-info">
+              <img src="${c.profilePicture || 'https://via.placeholder.com/100?text=User'}">
+              <div>
+                <strong>${c.username}</strong><br>
+                <span>${c.caption}</span>
+              </div>
+            </div>
+            ${
+              c.username === user?.username
+                ? '' // hide radio button for self captions
+                : `<input type="radio" name="vote" class="vote-radio" value="${c._id}">`
+            }
+          </div>
+        `).join('');
+
+        document.querySelectorAll('.vote-radio').forEach(radio => {
+          radio.addEventListener('change', (e) => {
+            selectedCaptionId = e.target.value;
+          });
+        });
+
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    submitVoteBtn.addEventListener('click', async () => {
+      if (!selectedCaptionId) return alert('Please select a caption to vote.');
+
+      try {
+        const res = await fetch(`${apiBase}/api/vote`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            voterId: user._id,
+            voterName: user.username,
+            captionId: selectedCaptionId,
+            memeId: selectedMemeId
+          })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          alert('✅ Vote submitted successfully!');
+          submitVoteBtn.classList.add('disabled');
+          submitVoteBtn.disabled = true;
+        } else {
+          alert(`⚠️ ${data.message}`);
+        }
+      } catch (err) {
+        console.error(err);
+        alert("❌ Failed to submit vote");
+      }
+    });
+
+    loadVotingData();
+  </script>
+</body>
+</html>
