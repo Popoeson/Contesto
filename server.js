@@ -492,7 +492,7 @@ app.get('/api/memes/latest', async (req, res) => {
 });
 
 // ✅ Toggle voting status
-app.patch("/:id/vote", async (req, res) => {
+app.patch("/api/memes/:id/vote", async (req, res) => {
   try {
     const meme = await Meme.findById(req.params.id);
     if (!meme) return res.status(404).json({ message: "Meme not found" });
@@ -511,7 +511,7 @@ app.patch("/:id/vote", async (req, res) => {
 });
 
 // ✅ Toggle archive status
-app.patch("/:id/archive", async (req, res) => {
+app.patch("/api/memes/:id/archive", async (req, res) => {
   try {
     const meme = await Meme.findById(req.params.id);
     if (!meme) return res.status(404).json({ message: "Meme not found" });
@@ -525,6 +525,34 @@ app.patch("/:id/archive", async (req, res) => {
     });
   } catch (err) {
     console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// ✅ Delete meme
+app.delete("/api/memes/:id", async (req, res) => {
+  try {
+    const meme = await Meme.findById(req.params.id);
+    if (!meme) {
+      return res.status(404).json({ message: "Meme not found" });
+    }
+
+    // 🧹 Optional: Delete from Cloudinary if you’re using it
+    if (meme.public_id) {
+      try {
+        const cloudinary = require("cloudinary").v2;
+        await cloudinary.uploader.destroy(meme.public_id);
+      } catch (cloudErr) {
+        console.warn("⚠️ Cloudinary deletion failed:", cloudErr.message);
+      }
+    }
+
+    // Delete from MongoDB
+    await Meme.findByIdAndDelete(req.params.id);
+
+    res.json({ message: "Meme deleted successfully" });
+  } catch (err) {
+    console.error("❌ Error deleting meme:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
