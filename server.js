@@ -102,6 +102,16 @@ const captionSchema = new mongoose.Schema({
   caption: { type: String, required: true },
 }, { timestamps: true });
 
+//=================
+// Vote Schema
+//==================
+const Vote = mongoose.model('Vote', new mongoose.Schema({
+  voterId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  voterName: String,
+  memeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Meme' },
+  captionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Caption' },
+}, { timestamps: true }));
+
 //=========================
 // 🎉 Winner Schema
 //=========================
@@ -130,11 +140,13 @@ const messageSchema = new mongoose.Schema(
 const User = mongoose.model('User', userSchema);
 const Meme = mongoose.model('Meme', memeSchema);
 const Caption = mongoose.model("Caption", captionSchema);
+const Vote = mongoose.model("Vote", voteSchema);
 const Winner = mongoose.model("Winner", winnerSchema);
 const Message = mongoose.model("Message", messageSchema);
 // Export models together
 module.exports = {
   Caption,
+  Vote,
   Meme,
   User,
   Winner,
@@ -632,6 +644,61 @@ app.get('/api/caption-check', async (req, res) => {
   } catch (err) {
     console.error("❌ Error fetching captions:", err);
     res.status(500).json({ message: "Server error fetching captions." });
+  }
+});
+
+
+// ==========================
+// 🗳️ Voting System Routes
+// ==========================
+
+// 📥 Get Meme and Captions for Voting
+app.get("/api/vote/meme/:memeId", async (req, res) => {
+  try {
+    const meme = await Meme.findById(req.params.memeId);
+    if (!meme) return res.status(404).json({ message: "Meme not found" });
+
+    const captions = await Caption.find({ memeId: meme._id }).sort({ createdAt: -1 });
+    res.json({ meme, captions });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error fetching meme for voting" });
+  }
+});
+
+// 🗳️ Submit a Vote
+app.post("/api/vote", async (req, res) => {
+  try {
+    const { voterId, voterName, memeId, captionId } = req.body;
+
+    if (!voterId || !memeId || !captionId)
+      return res.status(400).json({ message: "Missing vote data" });
+
+    const caption = await Caption.findById(captionId);
+    if (!caption) return res.status(404).json({ message: "Caption not found" });
+
+    // ❌ Prevent self vote
+    if (caption.userId?.toString() === voterId.toString() || caption.username === voterName)
+      return res.status(403).json({ message: "You cannot vote for your own caption" });
+
+    // ✅ Check if user already voted 3 times
+    const totalVotes = await Vote.countDocuments({ voterId });
+    if (totalVotes >= 3)
+      return res.status(403).json({ message: "You have already used all 3 votes" });
+
+    // ✅ Prevent duplicate vote on same caption
+    const existing = await Vote.findOne({ voterId, captionId });
+    if (existing)
+      return res.status(409).json({ message: "You have already voted for this caption" });
+
+    const newVote = new Vote({ voterId, voterName, memeId, captionId });
+    await newVote.save();
+
+    res.json({ message: "Vote submitted successfully", vote: newVote });
+
+  } catch (err) {
+    console.error("Vote Error:", err);
+    res.status(500).json({ message: "Error submitting vote" });
   }
 });
 
