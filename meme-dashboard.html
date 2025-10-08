@@ -12,8 +12,9 @@
       color: white;
       min-height: 100vh;
     }
+
     .container {
-      max-width: 1000px;
+      max-width: 1100px;
       margin: 40px auto;
       background: #fff;
       border-radius: 16px;
@@ -21,44 +22,78 @@
       color: #000;
       box-shadow: 0 0 15px rgba(0,0,0,0.2);
     }
+
     h2 {
       text-align: center;
       color: #1f3b73;
     }
+
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 20px;
     }
+
     th, td {
       padding: 12px 15px;
       text-align: center;
     }
+
     th {
       background-color: #1f3b73;
       color: #fff;
     }
+
     tr:nth-child(even) {
       background-color: #f0f4ff;
     }
+
     tr:hover {
       background-color: #e0ecff;
     }
+
     img {
       width: 80px;
       height: auto;
       border-radius: 8px;
     }
-    button.delete-btn {
-      background-color: #e63946;
-      color: white;
+
+    button {
       border: none;
       padding: 6px 12px;
       border-radius: 6px;
       cursor: pointer;
-      transition: background-color 0.3s ease;
+      color: #fff;
+      font-weight: 500;
+      transition: transform 0.2s, opacity 0.2s;
     }
-    button.delete-btn:hover {
+
+    button:hover {
+      transform: scale(1.05);
+      opacity: 0.9;
+    }
+
+    .vote-btn.start {
+      background-color: #2ecc71;
+    }
+
+    .vote-btn.end {
+      background-color: #e67e22;
+    }
+
+    .archive-btn.archive {
+      background-color: #3498db;
+    }
+
+    .archive-btn.unarchive {
+      background-color: #9b59b6;
+    }
+
+    .delete-btn {
+      background-color: #e63946;
+    }
+
+    .delete-btn:hover {
       background-color: #c7212c;
     }
   </style>
@@ -72,7 +107,9 @@
           <th>Preview</th>
           <th>Caption Count</th>
           <th>Uploaded</th>
-          <th>Action</th>
+          <th>Vote</th>
+          <th>Archive</th>
+          <th>Delete</th>
         </tr>
       </thead>
       <tbody>
@@ -82,60 +119,106 @@
   </div>
 
   <script>
-  const apiBase = "https://contesto.onrender.com/api/memes";
+    const apiBase = "https://contesto.onrender.com/api/memes";
 
-  async function fetchMemes() {
-    try {
-      const res = await fetch(apiBase);
-      const memes = await res.json();
+    // ✅ Fetch all memes
+    async function fetchMemes() {
+      try {
+        const res = await fetch(apiBase);
+        const memes = await res.json();
+        const tbody = document.querySelector("#memeTable tbody");
+        tbody.innerHTML = "";
 
-      const tbody = document.querySelector("#memeTable tbody");
-      tbody.innerHTML = "";
+        memes.forEach(meme => {
+          const row = document.createElement("tr");
 
-      memes.forEach(meme => {
-        const row = document.createElement("tr");
+          const isVotingActive = meme.isVotingActive || false;
+          const isArchived = meme.isArchived || false;
 
-        const imageCell = `<td><img src="${meme.imageUrl}" alt="meme" /></td>`;
-        const captionCell = `<td>${meme.captionCount || 0}</td>`;
-        const date = new Date(meme.createdAt || meme.uploadedAt).toLocaleString();
-        const dateCell = `<td>${date}</td>`;
-        const deleteCell = `
-          <td>
-            <button class="delete-btn" onclick="deleteMeme('${meme._id}')">Delete</button>
-          </td>
-        `;
+          const imageCell = `<td><img src="${meme.imageUrl}" alt="meme" /></td>`;
+          const captionCell = `<td>${meme.captionCount || 0}</td>`;
+          const date = new Date(meme.createdAt || meme.uploadedAt).toLocaleString();
+          const dateCell = `<td>${date}</td>`;
 
-        row.innerHTML = imageCell + captionCell + dateCell + deleteCell;
-        tbody.appendChild(row);
-      });
+          const voteButton = `
+            <button 
+              class="vote-btn ${isVotingActive ? 'end' : 'start'}" 
+              onclick="toggleVote('${meme._id}', ${isVotingActive})">
+              ${isVotingActive ? '🔴 End Vote' : '🟢 Start Vote'}
+            </button>
+          `;
 
-    } catch (err) {
-      console.error("Failed to load memes:", err);
-    }
-  }
+          const archiveButton = `
+            <button 
+              class="archive-btn ${isArchived ? 'unarchive' : 'archive'}"
+              onclick="toggleArchive('${meme._id}', ${isArchived})">
+              ${isArchived ? '♻️ Unarchive' : '📦 Archive'}
+            </button>
+          `;
 
-  async function deleteMeme(id) {
-    const confirmDelete = confirm("Are you sure you want to delete this meme?");
-    if (!confirmDelete) return;
+          const deleteButton = `
+            <button class="delete-btn" onclick="deleteMeme('${meme._id}')">
+              ❌ Delete
+            </button>
+          `;
 
-    try {
-      const res = await fetch(`${apiBase}/${id}`, {
-        method: "DELETE",
-      });
+          row.innerHTML = imageCell + captionCell + dateCell +
+                          `<td>${voteButton}</td>` +
+                          `<td>${archiveButton}</td>` +
+                          `<td>${deleteButton}</td>`;
 
-      if (res.ok) {
-        alert("Meme deleted successfully!");
-        fetchMemes();
-      } else {
-        alert("Failed to delete meme.");
+          tbody.appendChild(row);
+        });
+
+      } catch (err) {
+        console.error("Failed to load memes:", err);
       }
-    } catch (err) {
-      console.error("Error deleting meme:", err);
     }
-  }
 
-  // Initial fetch
-  fetchMemes();
+    // ✅ Toggle vote start/end
+    async function toggleVote(id, currentState) {
+      try {
+        const res = await fetch(`${apiBase}/${id}/vote`, { method: "PATCH" });
+        const data = await res.json();
+        alert(data.message);
+        fetchMemes();
+      } catch (err) {
+        console.error("Error toggling vote:", err);
+      }
+    }
+
+    // ✅ Toggle archive/unarchive
+    async function toggleArchive(id, currentState) {
+      try {
+        const res = await fetch(`${apiBase}/${id}/archive`, { method: "PATCH" });
+        const data = await res.json();
+        alert(data.message);
+        fetchMemes();
+      } catch (err) {
+        console.error("Error toggling archive:", err);
+      }
+    }
+
+    // ✅ Delete meme
+    async function deleteMeme(id) {
+      const confirmDelete = confirm("Are you sure you want to delete this meme?");
+      if (!confirmDelete) return;
+
+      try {
+        const res = await fetch(`${apiBase}/${id}`, { method: "DELETE" });
+        if (res.ok) {
+          alert("Meme deleted successfully!");
+          fetchMemes();
+        } else {
+          alert("Failed to delete meme.");
+        }
+      } catch (err) {
+        console.error("Error deleting meme:", err);
+      }
+    }
+
+    // Initial load
+    fetchMemes();
   </script>
 </body>
-</html>
+  </html>
