@@ -48,18 +48,22 @@
       color: #fff;
     }
 
-    .meme-preview {
+    .feed {
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+      width: 100%;
+      max-width: 700px;
+    }
+
+    .meme-card {
       background-color: rgba(0, 0, 50, 0.7);
       border-radius: 12px;
       padding: 10px;
       box-shadow: 0 0 10px #000;
-      width: 100%;
-      max-width: 700px;
-      text-align: center;
-      margin-bottom: 25px;
     }
 
-    .meme-preview img {
+    .meme-card img {
       width: 100%;
       border-radius: 10px;
       border: 2px solid #fff;
@@ -68,17 +72,16 @@
     }
 
     .caption-list {
+      margin-top: 10px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      width: 100%;
-      max-width: 700px;
+      gap: 10px;
     }
 
     .caption-card {
       background-color: rgba(0, 0, 50, 0.6);
       border-radius: 12px;
-      padding: 12px;
+      padding: 10px;
       display: flex;
       align-items: flex-start;
       gap: 10px;
@@ -118,7 +121,6 @@
     .empty {
       text-align: center;
       color: #eee;
-      margin-top: 20px;
       font-style: italic;
     }
 
@@ -126,12 +128,6 @@
       header h1 {
         font-size: 18px;
       }
-
-      .caption-card {
-        flex-direction: row;
-        align-items: flex-start;
-      }
-
       .caption-card img {
         width: 40px;
         height: 40px;
@@ -145,12 +141,8 @@
     <h1>💬 All Captions</h1>
   </header>
 
-  <div class="meme-preview" id="memeContainer">
-    <p>Loading meme...</p>
-  </div>
-
-  <div class="caption-list" id="captionList">
-    <p class="empty">Loading captions...</p>
+  <div class="feed" id="feedContainer">
+    <p class="empty">Loading memes...</p>
   </div>
 
   <script>
@@ -166,55 +158,70 @@
       return "Just now";
     }
 
-    async function loadMeme() {
-      const container = document.getElementById("memeContainer");
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/memes/latest`);
-        const meme = await res.json();
-        if (meme && meme.imageUrl) {
-          container.innerHTML = `<img src="${meme.imageUrl}" alt="Latest Meme">`;
-        } else {
-          container.innerHTML = `<p>No meme available yet.</p>`;
-        }
-      } catch {
-        container.innerHTML = `<p>Failed to load meme.</p>`;
-      }
-    }
+    async function loadFeed() {
+      const container = document.getElementById("feedContainer");
 
-    async function loadCaptions() {
-      const list = document.getElementById("captionList");
       try {
-        const res = await fetch(`${API_BASE_URL}/api/caption-check`);
-        const captions = await res.json();
+        const memeRes = await fetch(`${API_BASE_URL}/api/memes`);
+        const memes = await memeRes.json();
 
-        if (!captions.length) {
-          list.innerHTML = `<p class="empty">No captions yet.</p>`;
+        if (!Array.isArray(memes) || memes.length === 0) {
+          container.innerHTML = `<p class="empty">No memes yet.</p>`;
           return;
         }
 
-        list.innerHTML = captions.map(c => {
-          const username = c.username || "Unknown";
-          const profilePic = c.profilePicture || `https://via.placeholder.com/100?text=${encodeURIComponent(username[0] || 'U')}`;
-          const captionText = c.caption || "";
-          const time = c.createdAt ? timeAgo(c.createdAt) : "";
-          return `
-            <div class="caption-card">
-              <img src="${profilePic}" alt="N/A">
-              <div class="caption-info">
-                <h3>${username}</h3>
-                <p>${captionText}</p>
-                <div class="time">${time}</div>
+        // ✅ Sort so newest memes appear first
+        memes.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        const capRes = await fetch(`${API_BASE_URL}/api/caption-check`);
+        const captions = await capRes.json();
+
+        container.innerHTML = "";
+
+        for (const meme of memes) {
+          const memeCaptions = captions.filter(
+            c => c.memeId === meme._id || c.meme === meme.imageUrl
+          );
+
+          const captionHTML = memeCaptions.length
+            ? memeCaptions.map(c => {
+                const username = c.username || "Unknown";
+                const profilePic = c.profilePicture || `https://via.placeholder.com/100?text=${encodeURIComponent(username[0] || 'U')}`;
+                const captionText = c.caption || "";
+                const time = c.createdAt ? timeAgo(c.createdAt) : "";
+                return `
+                  <div class="caption-card">
+                    <img src="${profilePic}" alt="user">
+                    <div class="caption-info">
+                      <h3>${username}</h3>
+                      <p>${captionText}</p>
+                      <div class="time">${time}</div>
+                    </div>
+                  </div>
+                `;
+              }).join("")
+            : `<p class="empty">No captions yet.</p>`;
+
+          // ✅ Insert newest memes first (top of the feed)
+          container.insertAdjacentHTML(
+            "afterbegin",
+            `
+            <div class="meme-card">
+              <img src="${meme.imageUrl}" alt="Meme">
+              <div class="caption-list">
+                ${captionHTML}
               </div>
             </div>
-          `;
-        }).join('');
-      } catch {
-        list.innerHTML = `<p class="empty">Failed to load captions.</p>`;
+            `
+          );
+        }
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = `<p class="empty">Failed to load feed.</p>`;
       }
     }
 
-    loadMeme();
-    loadCaptions();
+    loadFeed();
   </script>
 </body>
 </html>
