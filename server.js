@@ -711,7 +711,11 @@ app.post("/api/vote", async (req, res) => {
     if (existing)
       return res.status(409).json({ message: "You have already voted for this caption" });
 
-    const newVote = new Vote({ voterId, voterName, memeId, captionId });
+    // 🧠 Here's the key part:
+    // Since caption.meme is an imageUrl, get it from the caption
+    const memeUrl = caption.meme;
+
+    const newVote = new Vote({ voterId, voterName, memeId: memeUrl, captionId });
     await newVote.save();
 
     res.json({ message: "Vote submitted successfully", vote: newVote });
