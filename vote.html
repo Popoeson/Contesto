@@ -182,10 +182,10 @@
       alert("You must be logged in to vote.");
       window.location.href = "reward-login.html";
     }
-
-    const voterId = user?._id;
-    const voterName = user?.username;
-
+    
+   const voterId = user?._id || user?.id; // ✅ handles both cases
+   const voterName = user?.username;
+    
     function showPopup(message) {
       const popup = document.getElementById("popup");
       popup.textContent = message;
