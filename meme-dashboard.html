@@ -197,43 +197,44 @@
     }
 
     // ✅ Toggle Voting (no reload, instant feedback)
-    async function toggleVote(button, id, currentState) {
-      const nextState = !currentState;
+async function toggleVote(button, id, currentState) {
+  const nextState = !currentState;
 
-      // Instant UI update
-      button.textContent = nextState ? "End Vote" : "Start Vote";
-      button.className = nextState ? "end-btn" : "start-btn";
+  // Instant UI update
+  button.textContent = nextState ? "End Vote" : "Start Vote";
+  button.className = nextState ? "end-btn" : "start-btn";
 
-      const row = button.closest("tr");
-      const statusDot = row.querySelector(".status-dot");
-      const statusText = row.querySelector("td:nth-child(2)");
-      statusDot.className = `status-dot ${nextState ? "on" : "off"}`;
-      statusText.innerHTML = `
-        <span class="status-dot ${nextState ? "on" : "off"}"></span>
-        ${nextState ? "Active" : "Inactive"}
-      `;
+  const row = button.closest("tr");
+  const statusTd = row.querySelector("td:nth-child(2)");
+  statusTd.innerHTML = `
+    <span class="status-dot ${nextState ? "on" : "off"}"></span>
+    ${nextState ? "Active" : "Inactive"}
+  `;
 
-      try {
-        const res = await fetch(`${apiBase}/${id}/vote`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ isVotingActive: nextState })
-        });
-        if (!res.ok) throw new Error("Failed to update voting state");
-        showToast(nextState ? "✅ Voting started" : "✅ Voting ended", "success");
-      } catch (err) {
-        console.error(err);
-        showToast("❌ Error updating vote", "error");
+  try {
+    const res = await fetch(`${apiBase}/${id}/vote`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isVotingActive: nextState })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Failed to update voting state");
+    showToast(data.message, "success");
 
-        // Revert UI on failure
-        button.textContent = currentState ? "End Vote" : "Start Vote";
-        button.className = currentState ? "end-btn" : "start-btn";
-        statusDot.className = `status-dot ${currentState ? "on" : "off"}`;
-        statusText.innerHTML = `
-          <span class="status-dot ${currentState ? "on" : "off"}"></span>
-          ${currentState ? "Active" : "Inactive"}
-        `;
-      }
+    // ✅ Update the local state (so next toggle works correctly)
+    button.onclick = () => toggleVote(button, id, nextState);
+  } catch (err) {
+    console.error(err);
+    showToast("❌ Error updating vote", "error");
+
+    // Revert UI
+    button.textContent = currentState ? "End Vote" : "Start Vote";
+    button.className = currentState ? "end-btn" : "start-btn";
+    statusTd.innerHTML = `
+      <span class="status-dot ${currentState ? "on" : "off"}"></span>
+      ${currentState ? "Active" : "Inactive"}
+    `;
+  }
     }
 
     // ✅ Toggle Archive (no reload, instant feedback)
