@@ -464,26 +464,39 @@ app.delete('/api/users/:id', async (req, res) => {
     res.status(500).json({ message: 'Failed to delete user' });
   }
 });
+
 // ==========================
 // 📄 Fetch Memes
 // ==========================
 app.get("/api/memes", async (req, res) => {
   try {
-    const memes = await Meme.find().sort({ createdAt: -1 });
+    const { active, archived } = req.query;
+    const filter = {};
 
-    // For each meme, count how many captions it has
-    const memesWithCounts = await Promise.all(memes.map(async (meme) => {
-      const count = await Caption.countDocuments({ meme: meme.imageUrl }); // or meme._id if using ID
-      return {
-        _id: meme._id,
-        imageUrl: meme.imageUrl,
-        createdAt: meme.createdAt,
-        captionCount: count,
-      };
-    }));
+    // If query is active=true, return only active memes
+    if (active === "true") filter.isVotingActive = true;
+    if (archived === "true") filter.isArchived = true;
+
+    const memes = await Meme.find(filter).sort({ createdAt: -1 });
+
+    // Count captions for each meme
+    const memesWithCounts = await Promise.all(
+      memes.map(async (meme) => {
+        const count = await Caption.countDocuments({ meme: meme.imageUrl }); // adjust if you use meme._id
+        return {
+          _id: meme._id,
+          imageUrl: meme.imageUrl,
+          createdAt: meme.createdAt,
+          captionCount: count,
+          isVotingActive: meme.isVotingActive,
+          isArchived: meme.isArchived
+        };
+      })
+    );
 
     res.json(memesWithCounts);
   } catch (err) {
+    console.error("❌ Error fetching memes:", err);
     res.status(500).json({ error: "Failed to fetch memes" });
   }
 });
