@@ -225,7 +225,7 @@
         container.innerHTML = "";
 
         for (const meme of activeMemes) {
-          const memeCaptions = captions.filter(c => c.memeId === meme._id);
+          const memeCaptions = captions.filter(c => c.meme === meme.imageUrl);
           const captionHTML = memeCaptions.length
             ? memeCaptions.map(c => {
                 const username = c.username || "Unknown";
