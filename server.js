@@ -504,17 +504,20 @@ app.get('/api/memes/latest', async (req, res) => {
   }
 });
 
-// ✅ Toggle voting status
+// ✅ Update voting status based on frontend request
 app.patch("/api/memes/:id/vote", async (req, res) => {
   try {
-    const meme = await Meme.findById(req.params.id);
+    const { isVotingActive } = req.body; // ✅ frontend sends this
+    const meme = await Meme.findByIdAndUpdate(
+      req.params.id,
+      { isVotingActive },
+      { new: true }
+    );
+
     if (!meme) return res.status(404).json({ message: "Meme not found" });
 
-    meme.isVotingActive = !meme.isVotingActive;
-    await meme.save();
-
     res.json({
-      message: meme.isVotingActive ? "Voting started" : "Voting ended",
+      message: isVotingActive ? "Voting started" : "Voting ended",
       meme,
     });
   } catch (err) {
@@ -523,17 +526,20 @@ app.patch("/api/memes/:id/vote", async (req, res) => {
   }
 });
 
-// ✅ Toggle archive status
+// ✅ Update archive status based on frontend request
 app.patch("/api/memes/:id/archive", async (req, res) => {
   try {
-    const meme = await Meme.findById(req.params.id);
+    const { isArchived } = req.body; // ✅ frontend sends this
+    const meme = await Meme.findByIdAndUpdate(
+      req.params.id,
+      { isArchived },
+      { new: true }
+    );
+
     if (!meme) return res.status(404).json({ message: "Meme not found" });
 
-    meme.isArchived = !meme.isArchived;
-    await meme.save();
-
     res.json({
-      message: meme.isArchived ? "Meme archived" : "Meme unarchived",
+      message: isArchived ? "Meme archived" : "Meme unarchived",
       meme,
     });
   } catch (err) {
@@ -563,7 +569,7 @@ app.delete("/api/memes/:id", async (req, res) => {
     // Delete from MongoDB
     await Meme.findByIdAndDelete(req.params.id);
 
-    res.json({ message: "Meme deleted successfully" });
+    res.json({ message: "Meme deleted successfull" });
   } catch (err) {
     console.error("❌ Error deleting meme:", err);
     res.status(500).json({ message: "Server error" });
