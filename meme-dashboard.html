@@ -78,9 +78,7 @@
       transition: transform 0.2s;
     }
 
-    img:hover {
-      transform: scale(1.05);
-    }
+    img:hover { transform: scale(1.05); }
 
     .btn {
       border: none;
@@ -95,12 +93,8 @@
       white-space: nowrap;
     }
 
-    .btn:hover {
-      transform: translateY(-2px);
-      opacity: 0.95;
-    }
+    .btn:hover { transform: translateY(-2px); opacity: 0.95; }
 
-    /* ✅ BUTTON COLORS */
     .vote-btn.start { background: #27ae60; }
     .vote-btn.end { background: #e74c3c; }
 
@@ -119,7 +113,6 @@
     .status-dot.on { background-color: #2ecc71; }
     .status-dot.off { background-color: #e74c3c; }
 
-    /* ✅ Toast styles */
     .toast {
       position: fixed;
       top: 20px;
@@ -142,9 +135,7 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    @keyframes fadeOut {
-      to { opacity: 0; transform: translateY(-10px); }
-    }
+    @keyframes fadeOut { to { opacity: 0; transform: translateY(-10px); } }
 
     @media (max-width: 768px) {
       body { padding: 20px 5px; }
@@ -177,7 +168,7 @@
   <script>
   const apiBase = "https://contesto.onrender.com/api/memes";
 
-  // ✅ Toast helper
+  // ✅ Toast notification
   function showToast(message, type = "info") {
     const toast = document.createElement("div");
     toast.className = `toast ${type}`;
@@ -186,6 +177,7 @@
     setTimeout(() => toast.remove(), 3000);
   }
 
+  // ✅ Fetch all memes once
   async function fetchMemes() {
     try {
       const res = await fetch(apiBase);
@@ -199,6 +191,8 @@
         const date = new Date(meme.createdAt || meme.uploadedAt).toLocaleString();
 
         const row = document.createElement("tr");
+        row.dataset.id = meme._id;
+
         row.innerHTML = `
           <td><img src="${meme.imageUrl}" alt="meme" /></td>
           <td>${meme.captionCount || 0}</td>
@@ -218,7 +212,7 @@
             </button>
           </td>
           <td>
-            <button type="button" class="btn delete-btn" onclick="deleteMeme('${meme._id}')">Delete</button>
+            <button type="button" class="btn delete-btn" onclick="deleteMeme('${meme._id}', this)">Delete</button>
           </td>
         `;
         tbody.appendChild(row);
@@ -229,72 +223,67 @@
     }
   }
 
-  // ✅ Toggle vote
+  // ✅ Toggle voting instantly (no reload)
   async function toggleVote(button, id, currentState) {
-    button.type = "button";
     const isStarting = !currentState;
-    button.disabled = true;
-    button.textContent = isStarting ? "Starting..." : "Ending...";
+    const statusDot = button.closest("td").querySelector(".status-dot");
+
+    // Instant UI feedback
+    button.textContent = isStarting ? "End Vote" : "Start Vote";
+    button.classList.toggle("start", !isStarting);
+    button.classList.toggle("end", isStarting);
+    statusDot.classList.toggle("on", isStarting);
+    statusDot.classList.toggle("off", !isStarting);
 
     try {
       const res = await fetch(`${apiBase}/${id}/vote`, { method: "PATCH" });
-      const data = await res.json();
-
       if (res.ok) {
-        await new Promise(r => setTimeout(r, 400));
         showToast(isStarting ? "✅ Voting started" : "✅ Voting ended", "success");
-        fetchMemes();
       } else {
         showToast("⚠️ Failed to toggle voting", "error");
-        console.error(data);
       }
-    } catch (err) {
+    } catch {
       showToast("❌ Network error while toggling vote", "error");
-    } finally {
-      button.disabled = false;
     }
   }
 
-  // ✅ Toggle archive
+  // ✅ Toggle archive instantly (no reload)
   async function toggleArchive(button, id, currentState) {
-    button.type = "button";
     const isArchiving = !currentState;
-    button.disabled = true;
-    button.textContent = isArchiving ? "Archiving..." : "Unarchiving...";
+    const statusDot = button.closest("td").querySelector(".status-dot");
+
+    // Instant UI feedback
+    button.textContent = isArchiving ? "Archived" : "Archive";
+    button.classList.toggle("archive", !isArchiving);
+    button.classList.toggle("archived", isArchiving);
+    statusDot.classList.toggle("on", isArchiving);
+    statusDot.classList.toggle("off", !isArchiving);
 
     try {
       const res = await fetch(`${apiBase}/${id}/archive`, { method: "PATCH" });
-      const data = await res.json();
-
       if (res.ok) {
-        await new Promise(r => setTimeout(r, 400));
         showToast(isArchiving ? "✅ Meme archived" : "✅ Meme unarchived", "success");
-        fetchMemes();
       } else {
         showToast("⚠️ Failed to update archive status", "error");
       }
-    } catch (err) {
+    } catch {
       showToast("❌ Network error while updating archive", "error");
-    } finally {
-      button.disabled = false;
     }
   }
 
-  // ✅ Delete meme
-  async function deleteMeme(id) {
-    const confirmDelete = confirm("Are you sure you want to delete this meme?");
-    if (!confirmDelete) return;
-
+  // ✅ Delete meme (remove row instantly)
+  async function deleteMeme(id, btn) {
+    if (!confirm("Are you sure you want to delete this meme?")) return;
+    const row = btn.closest("tr");
     try {
       const res = await fetch(`${apiBase}/${id}`, { method: "DELETE" });
       if (res.ok) {
-        await new Promise(r => setTimeout(r, 400));
+        row.remove();
         showToast("🗑️ Meme deleted", "success");
-        fetchMemes();
       } else {
         showToast("❌ Failed to delete meme", "error");
       }
-    } catch (err) {
+    } catch {
       showToast("⚠️ Network error while deleting meme", "error");
     }
   }
@@ -302,4 +291,4 @@
   fetchMemes();
   </script>
 </body>
-</html>
+  </html>
