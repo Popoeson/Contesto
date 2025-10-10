@@ -242,7 +242,7 @@
                       <p>${captionText}</p>
                       ${isSelf
                         ? `<small>(You can’t vote for your own caption)</small>`
-                        : `<label><input type="radio" name="vote_${meme._id}" value="${c._id}" data-meme="${meme._id}" style="margin-right:5px;"> Vote</label>`
+                        : `<label><input type="radio" name="vote_${meme.imageUrl}" value="${c._id}" data-meme="${meme.imageUrl}">Vote</label>`
                       }
                       <div class="time">${time}</div>
                     </div>
