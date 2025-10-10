@@ -132,7 +132,7 @@
     const apiBase = "https://contesto.onrender.com/api/memes";
 
     // ✅ Show toast message
-    function showToast(message, type) {
+    function showToast(message) {
       const toast = document.createElement("div");
       toast.className = "toast";
       toast.textContent = message;
@@ -148,11 +148,11 @@
         renderMemes(memes);
       } catch (err) {
         console.error(err);
-        showToast("⚠️ Failed to load memes", "error");
+        showToast("⚠️ Failed to load memes");
       }
     }
 
-    // ✅ Render table rows
+    // ✅ Render table rows (reflect actual DB state only)
     function renderMemes(memes) {
       const body = document.getElementById("memeBody");
       body.innerHTML = "";
@@ -164,14 +164,14 @@
         const imgTd = document.createElement("td");
         imgTd.innerHTML = `<img src="${meme.imageUrl}" alt="Meme Image">`;
 
-        // Voting status
+        // Voting status (reflect DB state only)
         const voteStatusTd = document.createElement("td");
         voteStatusTd.innerHTML = `
           <span class="status-dot ${meme.isVotingActive ? "on" : "off"}"></span>
           ${meme.isVotingActive ? "Active" : "Inactive"}
         `;
 
-        // Vote toggle button
+        // Vote toggle button (only user action changes it)
         const voteBtnTd = document.createElement("td");
         const voteBtn = document.createElement("button");
         voteBtn.textContent = meme.isVotingActive ? "End Vote" : "Start Vote";
@@ -196,85 +196,71 @@
       });
     }
 
-// ✅ Toggle Voting (no reload, instant feedback)
-async function toggleVote(button, id, currentState) {
-  const nextState = !currentState;
+    // ✅ Toggle Voting (user click only)
+    async function toggleVote(button, id, currentState) {
+      const nextState = !currentState;
 
-  // Instant UI update
-  button.textContent = nextState ? "End Vote" : "Start Vote";
-  button.className = nextState ? "end-btn" : "start-btn";
+      try {
+        const res = await fetch(`${apiBase}/${id}/vote`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ isVotingActive: nextState })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Failed to update voting state");
 
-  const row = button.closest("tr");
-  const statusTd = row.querySelector("td:nth-child(2)");
-  statusTd.innerHTML = `
-    <span class="status-dot ${nextState ? "on" : "off"}"></span>
-    ${nextState ? "Active" : "Inactive"}
-  `;
+        showToast(data.message);
 
-  try {
-    const res = await fetch(`${apiBase}/${id}/vote`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ isVotingActive: nextState })
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Failed to update voting state");
+        // Reflect the real saved state from DB
+        button.textContent = data.meme.isVotingActive ? "End Vote" : "Start Vote";
+        button.className = data.meme.isVotingActive ? "end-btn" : "start-btn";
 
-    showToast(data.message, "success");
+        const row = button.closest("tr");
+        const statusTd = row.querySelector("td:nth-child(2)");
+        statusTd.innerHTML = `
+          <span class="status-dot ${data.meme.isVotingActive ? "on" : "off"}"></span>
+          ${data.meme.isVotingActive ? "Active" : "Inactive"}
+        `;
 
-    // ✅ Update button's click handler with latest state
-    button.onclick = () => toggleVote(button, id, nextState);
-  } catch (err) {
-    console.error(err);
-    showToast("❌ Error updating vote", "error");
-
-    // Revert UI if backend fails
-    button.textContent = currentState ? "End Vote" : "Start Vote";
-    button.className = currentState ? "end-btn" : "start-btn";
-    statusTd.innerHTML = `
-      <span class="status-dot ${currentState ? "on" : "off"}"></span>
-      ${currentState ? "Active" : "Inactive"}
-    `;
-  }
-}
-
-// ✅ Toggle Archive (no reload, instant feedback)
-async function toggleArchive(button, id, currentState) {
-  const nextState = !currentState;
-
-  // Instant UI update
-  button.textContent = nextState ? "Unarchive" : "Archive";
-  button.className = nextState ? "unarchive-btn" : "archive-btn";
-
-  const row = button.closest("tr");
-  const archiveStatusTd = row.querySelector("td:nth-child(4)");
-  archiveStatusTd.textContent = nextState ? "Archived" : "Visible";
-
-  try {
-    const res = await fetch(`${apiBase}/${id}/archive`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ isArchived: nextState })
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Failed to update archive state");
-
-    showToast(data.message, "success");
-
-    // ✅ Update button's click handler with latest state
-    button.onclick = () => toggleArchive(button, id, nextState);
-  } catch (err) {
-    console.error(err);
-    showToast("❌ Error updating archive", "error");
-
-    // Revert UI if backend fails
-    button.textContent = currentState ? "Unarchive" : "Archive";
-    button.className = currentState ? "unarchive-btn" : "archive-btn";
-    archiveStatusTd.textContent = currentState ? "Archived" : "Visible";
-  }
+        // Keep next correct state for next click
+        button.onclick = () => toggleVote(button, id, data.meme.isVotingActive);
+      } catch (err) {
+        console.error(err);
+        showToast("❌ Error updating vote");
+      }
     }
 
-    // 🚀 Load memes initially
+    // ✅ Toggle Archive (user click only)
+    async function toggleArchive(button, id, currentState) {
+      const nextState = !currentState;
+
+      try {
+        const res = await fetch(`${apiBase}/${id}/archive`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ isArchived: nextState })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Failed to update archive state");
+
+        showToast(data.message);
+
+        // Reflect actual DB state
+        button.textContent = data.meme.isArchived ? "Unarchive" : "Archive";
+        button.className = data.meme.isArchived ? "unarchive-btn" : "archive-btn";
+
+        const row = button.closest("tr");
+        const archiveStatusTd = row.querySelector("td:nth-child(4)");
+        archiveStatusTd.textContent = data.meme.isArchived ? "Archived" : "Visible";
+
+        button.onclick = () => toggleArchive(button, id, data.meme.isArchived);
+      } catch (err) {
+        console.error(err);
+        showToast("❌ Error updating archive");
+      }
+    }
+
+    // 🚀 Load memes initially (reflect DB only, don’t change anything)
     fetchMemes();
   </script>
 </body>
