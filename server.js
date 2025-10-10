@@ -689,6 +689,7 @@ app.get("/api/vote/meme/:memeId", async (req, res) => {
 // 🗳️ Submit a Vote
 app.post("/api/vote", async (req, res) => {
   try {
+    console.log("📩 Incoming vote data:", req.body);
     const { voterId, voterName, memeId, captionId } = req.body;
 
     if (!voterId || !memeId || !captionId)
