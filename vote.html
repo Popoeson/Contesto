@@ -129,7 +129,6 @@
       font-style: italic;
     }
 
-    /* ✅ Popup alert box */
     .popup {
       position: fixed;
       bottom: 30px;
@@ -152,17 +151,6 @@
       100% { opacity: 0; }
     }
 
-    @media (max-width: 500px) {
-      header h1 {
-        font-size: 18px;
-      }
-      .caption-card img {
-        width: 40px;
-        height: 40px;
-      }
-    }
-
-    /* ✅ Highlight the selected caption */
     .caption-card.voted {
       outline: 2px solid #ffcc00;
       background-color: rgba(255, 255, 0, 0.15);
@@ -251,7 +239,7 @@
                         isSelf
                           ? `<small>(You can’t vote for your own caption)</small>`
                           : `<label>
-                              <input type="radio" name="vote_${meme.imageUrl}" value="${c._id}" data-meme="${meme.imageUrl}" ${hasVoted ? "checked disabled" : ""}>
+                              <input type="radio" name="vote_${meme.imageUrl}" value="${c._id}" data-meme="${meme.imageUrl}" ${hasVoted ? "checked" : ""}>
                               Vote
                             </label>`
                       }
@@ -273,12 +261,30 @@
           );
         }
 
-        // ✅ Add listeners
+        // ✅ Handle voting/unvoting
         document.querySelectorAll("input[type='radio']").forEach(radio => {
-          radio.addEventListener("change", async (e) => {
+          radio.addEventListener("click", async (e) => {
             const captionId = e.target.value;
             const memeId = e.target.dataset.meme;
+            const savedVotes = JSON.parse(localStorage.getItem("userVotes") || "[]");
+            const alreadyVoted = savedVotes.find(v => v.captionId === captionId);
 
+            if (alreadyVoted) {
+              // 🔁 Unvote logic
+              try {
+                await fetch(`${API_BASE_URL}/api/vote/${captionId}/${voterId}`, { method: "DELETE" });
+                localStorage.setItem("userVotes", JSON.stringify(savedVotes.filter(v => v.captionId !== captionId)));
+                e.target.checked = false;
+                e.target.closest(".caption-card").classList.remove("voted");
+                showPopup("Vote removed ❌");
+              } catch (err) {
+                console.error("Unvote Error:", err);
+                showPopup("⚠️ Error removing vote");
+              }
+              return;
+            }
+
+            // ✅ New vote
             try {
               const res = await fetch(`${API_BASE_URL}/api/vote`, {
                 method: "POST",
@@ -289,16 +295,11 @@
               const data = await res.json();
               if (res.ok) {
                 showPopup("✅ Vote received!");
-                // ✅ Save vote locally
-                const saved = JSON.parse(localStorage.getItem("userVotes") || "[]");
-                saved.push({ memeId, captionId });
-                localStorage.setItem("userVotes", JSON.stringify(saved));
+                savedVotes.push({ memeId, captionId });
+                localStorage.setItem("userVotes", JSON.stringify(savedVotes));
 
-                // Highlight chosen caption
+                // highlight selected
                 e.target.closest(".caption-card").classList.add("voted");
-
-                // Disable all other radios for that meme
-                document.querySelectorAll(`input[name='vote_${memeId}']`).forEach(r => r.disabled = true);
               } else {
                 showPopup(`⚠️ ${data.message}`);
                 e.target.checked = false;
