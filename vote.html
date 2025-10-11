@@ -161,6 +161,12 @@
         height: 40px;
       }
     }
+
+    /* ✅ Highlight the selected caption */
+    .caption-card.voted {
+      outline: 2px solid #ffcc00;
+      background-color: rgba(255, 255, 0, 0.15);
+    }
   </style>
 </head>
 <body>
@@ -182,10 +188,10 @@
       alert("You must be logged in to vote.");
       window.location.href = "reward-login.html";
     }
-    
-   const voterId = user?._id || user?.id; // ✅ handles both cases
-   const voterName = user?.username;
-    
+
+    const voterId = user?._id || user?.id;
+    const voterName = user?.username;
+
     function showPopup(message) {
       const popup = document.getElementById("popup");
       popup.textContent = message;
@@ -205,21 +211,19 @@
 
     async function loadFeed() {
       const container = document.getElementById("feedContainer");
+      const savedVotes = JSON.parse(localStorage.getItem("userVotes") || "[]");
 
       try {
         const memeRes = await fetch(`${API_BASE_URL}/api/memes`);
         const memes = await memeRes.json();
-
-        // ✅ Only memes with active voting
         const activeMemes = memes.filter(m => m.isVotingActive);
+
         if (!activeMemes.length) {
           container.innerHTML = `<p class="empty">No active voting sessions.</p>`;
           return;
         }
 
-        // Sort newest first
         activeMemes.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
         const capRes = await fetch(`${API_BASE_URL}/api/caption-check`);
         const captions = await capRes.json();
         container.innerHTML = "";
@@ -234,15 +238,22 @@
                 const time = c.createdAt ? timeAgo(c.createdAt) : "";
                 const isSelf = c.username === voterName;
 
+                const hasVoted = savedVotes.some(v => v.captionId === c._id);
+                const votedClass = hasVoted ? "voted" : "";
+
                 return `
-                  <div class="caption-card">
+                  <div class="caption-card ${votedClass}">
                     <img src="${profilePic}" alt="user">
                     <div class="caption-info">
                       <h3>${username}</h3>
                       <p>${captionText}</p>
-                      ${isSelf
-                        ? `<small>(You can’t vote for your own caption)</small>`
-                        : `<label><input type="radio" name="vote_${meme.imageUrl}" value="${c._id}" data-meme="${meme.imageUrl}">Vote</label>`
+                      ${
+                        isSelf
+                          ? `<small>(You can’t vote for your own caption)</small>`
+                          : `<label>
+                              <input type="radio" name="vote_${meme.imageUrl}" value="${c._id}" data-meme="${meme.imageUrl}" ${hasVoted ? "checked disabled" : ""}>
+                              Vote
+                            </label>`
                       }
                       <div class="time">${time}</div>
                     </div>
@@ -256,15 +267,13 @@
             `
             <div class="meme-card">
               <img src="${meme.imageUrl}" alt="Meme">
-              <div class="caption-list">
-                ${captionHTML}
-              </div>
+              <div class="caption-list">${captionHTML}</div>
             </div>
             `
           );
         }
 
-        // ✅ Add listeners to all radio buttons
+        // ✅ Add listeners
         document.querySelectorAll("input[type='radio']").forEach(radio => {
           radio.addEventListener("change", async (e) => {
             const captionId = e.target.value;
@@ -280,6 +289,16 @@
               const data = await res.json();
               if (res.ok) {
                 showPopup("✅ Vote received!");
+                // ✅ Save vote locally
+                const saved = JSON.parse(localStorage.getItem("userVotes") || "[]");
+                saved.push({ memeId, captionId });
+                localStorage.setItem("userVotes", JSON.stringify(saved));
+
+                // Highlight chosen caption
+                e.target.closest(".caption-card").classList.add("voted");
+
+                // Disable all other radios for that meme
+                document.querySelectorAll(`input[name='vote_${memeId}']`).forEach(r => r.disabled = true);
               } else {
                 showPopup(`⚠️ ${data.message}`);
                 e.target.checked = false;
@@ -291,6 +310,7 @@
             }
           });
         });
+
       } catch (err) {
         console.error(err);
         container.innerHTML = `<p class="empty">Failed to load voting feed.</p>`;
