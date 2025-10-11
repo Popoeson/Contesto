@@ -272,7 +272,11 @@
             if (alreadyVoted) {
               // 🔁 Unvote logic
               try {
-                await fetch(`${API_BASE_URL}/api/vote/${captionId}/${voterId}`, { method: "DELETE" });
+                await fetch(`${API_BASE_URL}/api/vote/remove`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ voterId, memeId })
+                 });
                 localStorage.setItem("userVotes", JSON.stringify(savedVotes.filter(v => v.captionId !== captionId)));
                 e.target.checked = false;
                 e.target.closest(".caption-card").classList.remove("voted");
