@@ -108,7 +108,7 @@ const captionSchema = new mongoose.Schema({
 const voteSchema = new mongoose.Schema({
   voterId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   voterName: String,
-  memeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Meme' },
+  memeId: { type: String }, // ✅ stores meme imageUrl
   captionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Caption' },
 }, { timestamps: true });
 
@@ -692,38 +692,57 @@ app.post("/api/vote", async (req, res) => {
     console.log("📩 Incoming vote data:", req.body);
     const { voterId, voterName, memeId, captionId } = req.body;
 
-    if (!voterId || !memeId || !captionId)
+    // 🧱 Validate data
+    if (!voterId || !memeId || !captionId) {
+      console.log("❌ Missing vote data:", { voterId, memeId, captionId });
       return res.status(400).json({ message: "Missing vote data" });
+    }
 
+    // 🧾 Fetch caption
     const caption = await Caption.findById(captionId);
     if (!caption) return res.status(404).json({ message: "Caption not found" });
 
-    // ❌ Prevent self vote
-    if (caption.userId?.toString() === voterId.toString() || caption.username === voterName)
-      return res.status(403).json({ message: "You cannot vote for your own caption" });
+    // ❌ Prevent self-vote
+    if (
+      caption.userId?.toString() === voterId.toString() ||
+      caption.username === voterName
+    ) {
+      return res
+        .status(403)
+        .json({ message: "You cannot vote for your own caption" });
+    }
 
-    // ✅ Check if user already voted 3 times
+    // ✅ Check if user already used all 3 votes
     const totalVotes = await Vote.countDocuments({ voterId });
-    if (totalVotes >= 3)
-      return res.status(403).json({ message: "You have already used all 3 votes" });
+    if (totalVotes >= 3) {
+      return res
+        .status(403)
+        .json({ message: "You have already used all 3 votes" });
+    }
 
-    // ✅ Prevent duplicate vote on same caption
+    // ✅ Prevent duplicate vote on the same caption
     const existing = await Vote.findOne({ voterId, captionId });
-    if (existing)
-      return res.status(409).json({ message: "You have already voted for this caption" });
+    if (existing) {
+      return res
+        .status(409)
+        .json({ message: "You have already voted for this caption" });
+    }
 
-    // 🧠 Here's the key part:
-    // Since caption.meme is an imageUrl, get it from the caption
-    const memeUrl = caption.meme;
+    // ✅ Store vote (URL-based meme reference)
+    const newVote = new Vote({
+      voterId,
+      voterName,
+      memeId, // 👈 this is the imageUrl, not ObjectId
+      captionId,
+    });
 
-    const newVote = new Vote({ voterId, voterName, memeId: memeUrl, captionId });
     await newVote.save();
+    console.log("✅ Vote saved:", newVote);
 
     res.json({ message: "Vote submitted successfully", vote: newVote });
-
   } catch (err) {
     console.error("Vote Error:", err);
-    res.status(500).json({ message: "Error submitting vote" });
+    res.status(500).json({ message: "Error submitting vote", error: err.message });
   }
 });
 
