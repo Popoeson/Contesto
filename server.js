@@ -734,6 +734,33 @@ app.post("/api/vote", async (req, res) => {
   }
 });
 
+// 🗑️ Remove a Vote (when user clicks again on same caption)
+app.post("/api/vote/remove", async (req, res) => {
+  try {
+    const { voterId, memeId } = req.body;
+
+    if (!voterId || !memeId) {
+      return res.status(400).json({ message: "Missing voterId or memeId" });
+    }
+
+    // Find existing vote for that meme by the same user
+    const existingVote = await Vote.findOne({ voterId, memeId });
+    if (!existingVote) {
+      return res.status(404).json({ message: "Vote not found" });
+    }
+
+    // Delete the vote
+    await Vote.deleteOne({ _id: existingVote._id });
+
+    console.log(`🗑️ Vote removed by ${voterId} for meme ${memeId}`);
+
+    res.json({ message: "Vote removed successfully" });
+  } catch (err) {
+    console.error("Vote Remove Error:", err);
+    res.status(500).json({ message: "Server error removing vote" });
+  }
+});
+
 // ===============================
 // 🎯 Save Random Winner
 // ===============================
