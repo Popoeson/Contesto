@@ -761,6 +761,48 @@ app.post("/api/vote/remove", async (req, res) => {
   }
 });
 
+// 🏆 Leaderboard Route
+app.get("/api/leaderboard", async (req, res) => {
+  try {
+    const captions = await Caption.find({});
+    const votes = await Vote.find({});
+
+    // Create a map to count votes per user
+    const userVoteCount = {};
+
+    // Map each caption ID to its author
+    const captionToUser = {};
+    captions.forEach(cap => {
+      captionToUser[cap._id.toString()] = {
+        username: cap.username,
+        profilePicture: cap.profilePicture || "https://via.placeholder.com/100",
+      };
+    });
+
+    // Count votes for each caption's author
+    votes.forEach(vote => {
+      const captionInfo = captionToUser[vote.captionId?.toString()];
+      if (captionInfo) {
+        const { username, profilePicture } = captionInfo;
+        if (!userVoteCount[username]) {
+          userVoteCount[username] = { username, profilePicture, totalVotes: 0 };
+        }
+        userVoteCount[username].totalVotes += 1;
+      }
+    });
+
+    // Convert map to array and sort descending by votes
+    const leaderboard = Object.values(userVoteCount).sort(
+      (a, b) => b.totalVotes - a.totalVotes
+    );
+
+    res.json(leaderboard);
+  } catch (error) {
+    console.error("Leaderboard Error:", error);
+    res.status(500).json({ message: "Failed to fetch leaderboard" });
+  }
+});
+
 // ===============================
 // 🎯 Save Random Winner
 // ===============================
