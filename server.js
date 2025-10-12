@@ -122,7 +122,8 @@ const winnerSchema = new mongoose.Schema({
   caption: { type: String, required: true },
   meme: { type: String, required: true },
   profilePicture: { type: String },
-  pickedAt: { type: Date, default: Date.now }
+  pickedAt: { type: Date, default: Date.now },
+  source: { type: String, enum: ["random", "admin"], default: "random" } // 🆕 added
 });
 
 // 🗨️ Updated Message Schema
@@ -804,11 +805,11 @@ app.get("/api/leaderboard", async (req, res) => {
 });
 
 // ===============================
-// 🎯 Save Random Winner
+// 🎯 Save Winner (Random or Admin)
 // ===============================
 app.post("/api/winner/save", async (req, res) => {
   try {
-    const { username, caption, meme, profilePicture } = req.body;
+    const { username, caption, meme, profilePicture, source } = req.body;
 
     if (!username || !caption || !meme) {
       return res.status(400).json({ message: "Username, caption, and meme are required." });
@@ -821,11 +822,18 @@ app.post("/api/winner/save", async (req, res) => {
     }
 
     // ✅ Save the winner
-    const newWinner = new Winner({ username, caption, meme, profilePicture });
+    const newWinner = new Winner({
+      username,
+      caption,
+      meme,
+      profilePicture,
+      source: source || "random" // "random" or "admin"
+    });
+
     await newWinner.save();
 
     res.status(201).json({
-      message: "Winner saved successfully!",
+      message: `Winner saved successfully (${source || "random"})!`,
       winner: newWinner
     });
 
