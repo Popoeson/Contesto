@@ -124,103 +124,110 @@
   <div class="popup" id="popup"></div>
 
   <script>
-    const API_BASE_URL = "https://contesto.onrender.com";
+  const API_BASE_URL = "https://contesto.onrender.com";
 
-    function showPopup(message) {
-      const popup = document.getElementById("popup");
-      popup.textContent = message;
-      popup.style.display = "block";
-      setTimeout(() => popup.style.display = "none", 3000);
-    }
+  function showPopup(message) {
+    const popup = document.getElementById("popup");
+    popup.textContent = message;
+    popup.style.display = "block";
+    setTimeout(() => popup.style.display = "none", 3000);
+  }
 
-    async function fetchLeaderboard() {
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/leaderboard`);
-        const data = await res.json();
+  async function fetchLeaderboard() {
+    try {
+      const [leaderboardRes, winnersRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/api/leaderboard`),
+        fetch(`${API_BASE_URL}/api/winners`)
+      ]);
 
-        const container = document.getElementById("leaderboardContainer");
-        container.innerHTML = "";
+      const leaderboardData = await leaderboardRes.json();
+      const winnersData = await winnersRes.json();
 
-        if (!data.length) {
-          container.innerHTML = `<p>No votes yet.</p>`;
-          return;
-        }
+      const container = document.getElementById("leaderboardContainer");
+      container.innerHTML = "";
 
-        data.sort((a, b) => b.voteCount - a.voteCount);
-
-        data.forEach((user, index) => {
-          const row = document.createElement("div");
-          row.className = "user-row";
-          if (index < 2) row.classList.add("glow");
-
-          row.innerHTML = `
-            <div class="user-info">
-              <img src="${user.profilePicture || 'https://via.placeholder.com/100?text=U'}" alt="user">
-              <div>
-                <div class="username">${user.username}</div>
-                <div class="votes">Votes: ${user.voteCount}</div>
-              </div>
-            </div>
-            ${
-              index < 2
-                ? `<button class="winner-btn" data-username="${user.username}" data-profile="${user.profilePicture || ''}">
-                    🎖️ Select Winner
-                   </button>`
-                : ""
-            }
-          `;
-
-          container.appendChild(row);
-        });
-
-        // 🟡 Attach event listeners for top 2 "Select Winner" buttons
-        document.querySelectorAll(".winner-btn").forEach(btn => {
-          btn.addEventListener("click", async () => {
-            const username = btn.dataset.username;
-            const profilePicture = btn.dataset.profile;
-            const selectedUser = data.find(u => u.username === username);
-
-            if (!selectedUser) return showPopup("User not found!");
-
-            if (!confirm(`Confirm selecting ${username} as a winner?`)) return;
-
-            try {
-              const res = await fetch(`${API_BASE_URL}/api/winner/save`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  username,
-                  caption: selectedUser.caption || "N/A",
-                  meme: selectedUser.meme || "N/A",
-                  profilePicture,
-                  source: "admin"
-                })
-              });
-
-              const result = await res.json();
-              if (res.ok) {
-                showPopup(`🏅 ${username} saved as winner!`);
-                btn.disabled = true;
-                btn.textContent = "✅ Winner Saved";
-              } else {
-                showPopup(`⚠️ ${result.message}`);
-              }
-            } catch (err) {
-              console.error("Error saving winner:", err);
-              showPopup("❌ Error saving winner");
-            }
-          });
-        });
-      } catch (err) {
-        console.error("Leaderboard fetch error", err);
-        showPopup("❌ Error loading leaderboard");
+      if (!leaderboardData.length) {
+        container.innerHTML = `<p>No votes yet.</p>`;
+        return;
       }
+
+      leaderboardData.sort((a, b) => b.voteCount - a.voteCount);
+
+      leaderboardData.forEach((user, index) => {
+        const isWinner = winnersData.some(w => w.username === user.username);
+        const row = document.createElement("div");
+        row.className = "user-row";
+        if (index < 2) row.classList.add("glow");
+
+        row.innerHTML = `
+          <div class="user-info">
+            <img src="${user.profilePicture || 'https://via.placeholder.com/100?text=U'}" alt="user">
+            <div>
+              <div class="username">${user.username}</div>
+              <div class="votes">Votes: ${user.voteCount ?? 0}</div>
+            </div>
+          </div>
+          ${
+            index < 2
+              ? `<button class="winner-btn" 
+                    data-username="${user.username}" 
+                    data-profile="${user.profilePicture || ''}"
+                    ${isWinner ? "disabled" : ""}>
+                    ${isWinner ? "✅ Winner Saved" : "🎖️ Select Winner"}
+                 </button>`
+              : ""
+          }
+        `;
+
+        container.appendChild(row);
+      });
+
+      // 🟡 Attach event listeners for "Select Winner" buttons
+      document.querySelectorAll(".winner-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const username = btn.dataset.username;
+          const profilePicture = btn.dataset.profile;
+          const selectedUser = leaderboardData.find(u => u.username === username);
+
+          if (!selectedUser) return showPopup("User not found!");
+
+          if (!confirm(`Confirm selecting ${username} as a winner?`)) return;
+
+          try {
+            const res = await fetch(`${API_BASE_URL}/api/winner/save`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                username,
+                caption: selectedUser.caption || "N/A",
+                meme: selectedUser.meme || "N/A",
+                profilePicture,
+                source: "admin"
+              })
+            });
+
+            const result = await res.json();
+            if (res.ok) {
+              showPopup(`🏅 ${username} saved as winner!`);
+              btn.disabled = true;
+              btn.textContent = "✅ Winner Saved";
+            } else {
+              showPopup(`⚠️ ${result.message}`);
+            }
+          } catch (err) {
+            console.error("Error saving winner:", err);
+            showPopup("❌ Error saving winner");
+          }
+        });
+      });
+    } catch (err) {
+      console.error("Leaderboard fetch error", err);
+      showPopup("❌ Error loading leaderboard");
     }
+  }
 
-    fetchLeaderboard();
-
-    // ♻️ Auto refresh every 20 seconds for real-time feel
-    setInterval(fetchLeaderboard, 20000);
+  fetchLeaderboard();
+  setInterval(fetchLeaderboard, 20000); // auto-refresh
   </script>
 </body>
   </html>
