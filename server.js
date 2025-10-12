@@ -815,10 +815,20 @@ app.post("/api/winner/save", async (req, res) => {
       return res.status(400).json({ message: "Username, caption, and meme are required." });
     }
 
-    // 🛑 Prevent duplicate winner for the same meme
-    const existingWinner = await Winner.findOne({ meme });
-    if (existingWinner) {
-      return res.status(409).json({ message: "Winner already picked for this meme." });
+    // If source is "random" → block duplicates for same meme
+    if (source === "random") {
+      const existingWinner = await Winner.findOne({ meme });
+      if (existingWinner) {
+        return res.status(409).json({ message: "Winner already picked for this meme." });
+      }
+    }
+
+    // If source is "admin" → prevent duplicate winner entries for same username
+    if (source === "admin") {
+      const existingAdminPick = await Winner.findOne({ username });
+      if (existingAdminPick) {
+        return res.status(409).json({ message: `${username} already selected as winner.` });
+      }
     }
 
     // ✅ Save the winner
@@ -842,6 +852,7 @@ app.post("/api/winner/save", async (req, res) => {
     res.status(500).json({ message: "Server error saving winner." });
   }
 });
+
 
 // ==========================
 // 🏆 Get All Winners
