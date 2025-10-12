@@ -2,155 +2,241 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Contesto Admin Dashboard</title>
+  <title>🏆 Admin Leaderboard - Contesto</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
-      background: linear-gradient(to right, #0d47a1, #42a5f5);
-      color: white;
-      padding: 20px;
-    }
-    h1 {
-      text-align: center;
-    }
-    .search-container {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    .search-container input {
-      padding: 8px;
-      width: 300px;
-      max-width: 80%;
-      font-size: 16px;
-    }
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 20px;
-    }
-    .card {
-      background: rgba(255, 255, 255, 0.1);
-      padding: 15px;
-      border-radius: 10px;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, royalblue, cyan);
+      color: #fff;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 26px;
       text-align: center;
+      margin-bottom: 20px;
     }
-    .card img {
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      object-fit: cover;
+
+    .leaderboard {
+      width: 100%;
+      max-width: 700px;
+      background: rgba(0, 0, 50, 0.6);
+      border-radius: 16px;
+      padding: 15px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.5);
+    }
+
+    .user-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px;
       margin-bottom: 10px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      transition: transform 0.5s ease, background 0.3s;
     }
-    .card .status {
-      padding: 5px 10px;
-      border-radius: 5px;
+
+    .user-row:hover {
+      background: rgba(255, 255, 255, 0.15);
+      transform: scale(1.02);
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .user-info img {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: 2px solid gold;
+      object-fit: cover;
+    }
+
+    .username {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .votes {
       font-size: 14px;
-      margin: 8px 0;
+      color: #ffcc00;
     }
-    .status.active {
-      background: green;
-    }
-    .status.inactive {
-      background: red;
-    }
-    .actions button {
-      margin: 5px;
-      padding: 6px 12px;
+
+    .winner-btn {
+      background: linear-gradient(90deg, gold, orange);
+      color: #000;
       border: none;
-      border-radius: 5px;
+      border-radius: 10px;
+      padding: 6px 12px;
       cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
     }
-    .delete-btn {
-      background: red;
-      color: white;
+
+    .winner-btn:hover {
+      background: linear-gradient(90deg, orange, gold);
+      transform: scale(1.05);
     }
-    .activate-btn {
-      background: green;
-      color: white;
+
+    .popup {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.8);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 8px;
+      display: none;
+      z-index: 1000;
+      animation: fadeInOut 3s ease;
     }
-    .deactivate-btn {
-      background: orange;
-      color: white;
+
+    @keyframes fadeInOut {
+      0% { opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    .glow {
+      box-shadow: 0 0 20px 4px gold;
     }
   </style>
 </head>
 <body>
-  <h1>Contesto Members</h1>
+  <h1>🏆 Admin Leaderboard</h1>
 
-  <div class="search-container">
-    <input type="text" id="searchInput" placeholder="Search by email or phone..." onkeyup="renderCards()">
+  <div class="leaderboard" id="leaderboardContainer">
+    <p>Loading leaderboard...</p>
   </div>
 
-  <div class="cards" id="userCards"></div>
+  <div class="popup" id="popup"></div>
 
   <script>
-    const API_URL = "https://contesto.onrender.com/api/users";
-    let users = [];
+    const API_BASE_URL = "https://contesto.onrender.com";
 
-    async function fetchUsers() {
+    // Retrieve saved winners (for persistent "Winner Saved" state)
+    const savedWinners = JSON.parse(localStorage.getItem("savedWinners")) || [];
+
+    function showPopup(message) {
+      const popup = document.getElementById("popup");
+      popup.textContent = message;
+      popup.style.display = "block";
+      setTimeout(() => popup.style.display = "none", 3000);
+    }
+
+    async function fetchLeaderboard() {
       try {
-        const res = await fetch(API_URL);
-        users = await res.json();
-        renderCards();
+        const res = await fetch(`${API_BASE_URL}/api/leaderboard`);
+        const data = await res.json();
+
+        const container = document.getElementById("leaderboardContainer");
+        container.innerHTML = "";
+
+        if (!data.length) {
+          container.innerHTML = `<p>No votes yet.</p>`;
+          return;
+        }
+
+        // Sort by vote count descending
+        data.sort((a, b) => (b.voteCount || 0) - (a.voteCount || 0));
+
+        data.forEach((user, index) => {
+          const row = document.createElement("div");
+          row.className = "user-row";
+          if (index < 2) row.classList.add("glow");
+
+          const votes = user.voteCount !== undefined ? user.voteCount : 0;
+          const username = user.username || "Unnamed";
+          const profile = user.profilePicture || 'https://via.placeholder.com/100?text=U';
+
+          const isWinner = savedWinners.includes(username);
+
+          row.innerHTML = `
+            <div class="user-info">
+              <img src="${profile}" alt="user">
+              <div>
+                <div class="username">${username}</div>
+                <div class="votes">Votes: ${votes}</div>
+              </div>
+            </div>
+            ${
+              index < 2
+                ? `<button class="winner-btn" data-username="${username}" data-profile="${profile}" ${isWinner ? "disabled" : ""}>
+                    ${isWinner ? "✅ Winner Saved" : "🎖️ Select Winner"}
+                   </button>`
+                : ""
+            }
+          `;
+
+          container.appendChild(row);
+        });
+
+        // Attach event listeners to "Select Winner" buttons
+        document.querySelectorAll(".winner-btn").forEach(btn => {
+          btn.addEventListener("click", async () => {
+            const username = btn.dataset.username;
+            const profilePicture = btn.dataset.profile;
+            const selectedUser = data.find(u => u.username === username);
+
+            if (!selectedUser) return showPopup("User not found!");
+
+            if (!confirm(`Confirm selecting ${username} as a winner?`)) return;
+
+            try {
+              const res = await fetch(`${API_BASE_URL}/api/winner/save`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  username,
+                  caption: selectedUser.caption || "N/A",
+                  meme: selectedUser.meme || "N/A",
+                  profilePicture,
+                  source: "admin"
+                })
+              });
+
+              const result = await res.json();
+              if (res.ok) {
+                showPopup(`🏅 ${username} saved as winner!`);
+                btn.disabled = true;
+                btn.textContent = "✅ Winner Saved";
+
+                // Save winner persistently
+                if (!savedWinners.includes(username)) {
+                  savedWinners.push(username);
+                  localStorage.setItem("savedWinners", JSON.stringify(savedWinners));
+                }
+              } else {
+                showPopup(`⚠️ ${result.message}`);
+              }
+            } catch (err) {
+              console.error("Error saving winner:", err);
+              showPopup("❌ Error saving winner");
+            }
+          });
+        });
       } catch (err) {
-        console.error("Failed to fetch users:", err);
+        console.error("Leaderboard fetch error", err);
+        showPopup("❌ Error loading leaderboard");
       }
     }
 
-    function renderCards() {
-      const container = document.getElementById("userCards");
-      const searchQuery = document.getElementById("searchInput").value.toLowerCase();
+    fetchLeaderboard();
 
-      const filtered = users.filter(u =>
-        (u.email && u.email.toLowerCase().includes(searchQuery)) ||
-        (u.phone && u.phone.toLowerCase().includes(searchQuery))
-      );
-
-      container.innerHTML = filtered.map(u => `
-        <div class="card">
-          <img src="${u.profilePicture}" alt="Profile">
-          <h3>${u.serial}. ${u.email}</h3>
-          <p><b>fullName:</b> ${u.fullName}</p>
-          <p><b>username:</b> ${u.username}</p>
-          <p><b>Phone:</b> ${u.phone}</p>
-          <p><b>Location:</b> ${u.location}</p>
-          <p><b>About:</b> ${u.about}</p>
-          <p><b>Interest:</b> ${u.interest}</p>
-          <p><b>Socials:</b> ${u.socials.length ? u.socials.join(", ") : "N/A"}</p>
-          <div class="status ${u.status}">${u.status.toUpperCase()}</div>
-          <div class="actions">
-            <button class="delete-btn" onclick="deleteUser('${u.id}')">Delete</button>
-            <button class="activate-btn" onclick="activateUser('${u.id}')">Activate</button>
-            <button class="deactivate-btn" onclick="deactivateUser('${u.id}')">Deactivate</button>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    async function deleteUser(id) {
-      if (!confirm("Delete this user?")) return;
-      await fetch(`${API_URL}/${id}`, { method: "DELETE" });
-      users = users.filter(u => u.id !== id);
-      renderCards();
-    }
-
-    async function activateUser(id) {
-      await fetch(`${API_URL}/${id}/activate`, { method: "PATCH" });
-      users = users.map(u => u.id === id ? { ...u, status: "active" } : u);
-      renderCards();
-    }
-
-    async function deactivateUser(id) {
-      await fetch(`${API_URL}/${id}/deactivate`, { method: "PATCH" });
-      users = users.map(u => u.id === id ? { ...u, status: "inactive" } : u);
-      renderCards();
-    }
-
-    fetchUsers();
+    // Refresh every 20 seconds (preserving local winners)
+    setInterval(fetchLeaderboard, 20000);
   </script>
 </body>
 </html>
