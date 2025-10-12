@@ -151,7 +151,8 @@
         return;
       }
 
-      leaderboardData.sort((a, b) => b.voteCount - a.voteCount);
+      // ✅ Sort by totalVotes (correct property)
+      leaderboardData.sort((a, b) => b.totalVotes - a.totalVotes);
 
       leaderboardData.forEach((user, index) => {
         const isWinner = winnersData.some(w => w.username === user.username);
@@ -164,7 +165,7 @@
             <img src="${user.profilePicture || 'https://via.placeholder.com/100?text=U'}" alt="user">
             <div>
               <div class="username">${user.username}</div>
-              <div class="votes">Votes: ${user.voteCount ?? 0}</div>
+              <div class="votes">Votes: ${user.totalVotes ?? 0}</div>
             </div>
           </div>
           ${
