@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🏆 Admin Leaderboard - Contesto</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, royalblue, cyan);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 26px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .leaderboard {
+      width: 100%;
+      max-width: 700px;
+      background: rgba(0, 0, 50, 0.6);
+      border-radius: 16px;
+      padding: 15px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.5);
+    }
+
+    .user-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px;
+      margin-bottom: 10px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      transition: transform 0.5s ease, background 0.3s;
+    }
+
+    .user-row:hover {
+      background: rgba(255, 255, 255, 0.15);
+      transform: scale(1.02);
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .user-info img {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: 2px solid gold;
+      object-fit: cover;
+    }
+
+    .username {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .votes {
+      font-size: 14px;
+      color: #ffcc00;
+    }
+
+    .winner-btn {
+      background: linear-gradient(90deg, gold, orange);
+      color: #000;
+      border: none;
+      border-radius: 10px;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .winner-btn:hover {
+      background: linear-gradient(90deg, orange, gold);
+      transform: scale(1.05);
+    }
+
+    .popup {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.8);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 8px;
+      display: none;
+      z-index: 1000;
+      animation: fadeInOut 3s ease;
+    }
+
+    @keyframes fadeInOut {
+      0% { opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    .glow {
+      box-shadow: 0 0 20px 4px gold;
+    }
+  </style>
+</head>
+<body>
+  <h1>🏆 Admin Leaderboard</h1>
+
+  <div class="leaderboard" id="leaderboardContainer">
+    <p>Loading leaderboard...</p>
+  </div>
+
+  <div class="popup" id="popup"></div>
+
+  <script>
+    const API_BASE_URL = "https://contesto.onrender.com";
+
+    function showPopup(message) {
+      const popup = document.getElementById("popup");
+      popup.textContent = message;
+      popup.style.display = "block";
+      setTimeout(() => popup.style.display = "none", 3000);
+    }
+
+    async function fetchLeaderboard() {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/leaderboard`);
+        const data = await res.json();
+
+        const container = document.getElementById("leaderboardContainer");
+        container.innerHTML = "";
+
+        if (!data.length) {
+          container.innerHTML = `<p>No votes yet.</p>`;
+          return;
+        }
+
+        data.sort((a, b) => b.voteCount - a.voteCount);
+
+        data.forEach((user, index) => {
+          const row = document.createElement("div");
+          row.className = "user-row";
+          if (index < 2) row.classList.add("glow");
+
+          row.innerHTML = `
+            <div class="user-info">
+              <img src="${user.profilePicture || 'https://via.placeholder.com/100?text=U'}" alt="user">
+              <div>
+                <div class="username">${user.username}</div>
+                <div class="votes">Votes: ${user.voteCount}</div>
+              </div>
+            </div>
+            ${
+              index < 2
+                ? `<button class="winner-btn" data-username="${user.username}" data-profile="${user.profilePicture || ''}">
+                    🎖️ Select Winner
+                   </button>`
+                : ""
+            }
+          `;
+
+          container.appendChild(row);
+        });
+
+        // 🟡 Attach event listeners for top 2 "Select Winner" buttons
+        document.querySelectorAll(".winner-btn").forEach(btn => {
+          btn.addEventListener("click", async () => {
+            const username = btn.dataset.username;
+            const profilePicture = btn.dataset.profile;
+            const selectedUser = data.find(u => u.username === username);
+
+            if (!selectedUser) return showPopup("User not found!");
+
+            if (!confirm(`Confirm selecting ${username} as a winner?`)) return;
+
+            try {
+              const res = await fetch(`${API_BASE_URL}/api/winner/save`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  username,
+                  caption: selectedUser.caption || "N/A",
+                  meme: selectedUser.meme || "N/A",
+                  profilePicture,
+                  source: "admin"
+                })
+              });
+
+              const result = await res.json();
+              if (res.ok) {
+                showPopup(`🏅 ${username} saved as winner!`);
+                btn.disabled = true;
+                btn.textContent = "✅ Winner Saved";
+              } else {
+                showPopup(`⚠️ ${result.message}`);
+              }
+            } catch (err) {
+              console.error("Error saving winner:", err);
+              showPopup("❌ Error saving winner");
+            }
+          });
+        });
+      } catch (err) {
+        console.error("Leaderboard fetch error", err);
+        showPopup("❌ Error loading leaderboard");
+      }
+    }
+
+    fetchLeaderboard();
+
+    // ♻️ Auto refresh every 20 seconds for real-time feel
+    setInterval(fetchLeaderboard, 20000);
+  </script>
+</body>
+  </html>
